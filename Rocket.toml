@@ -1,0 +1,11 @@
+[global]
+template_dir = "static"
+
+[development]
+databases = { sqlite_database = { url = "db/dev.sqlite" } }
+
+[staging]
+databases = { sqlite_database = { url = "db/staging.sqlite" } }
+
+[production]
+databases = { sqlite_database = { url = "db/prod.sqlite" } }

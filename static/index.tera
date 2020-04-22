@@ -1,0 +1,37 @@
+{% extends "base" %}
+
+{% block title %}last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Desciprion</th>
+                    <th>Update to today</th>
+                </tr>
+                <tbody>
+                {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.name }}</td>
+                        <td>{{ task.description }}</td>
+                        <td>
+                            <form class="inline" action="{{ task.id }}" method="post">
+                                <input type="hidden" name="_method" value="put" />
+                                <button class="button is-small is-primary is-light" type="submit">update</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </thead>
+        </table>
+    </div>
+{% endblock content %}

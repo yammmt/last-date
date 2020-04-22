@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block head %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock title %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
+    {% endblock head %}
+</head>
+
+<body>
+    <section class="hero is-primary is-bold">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">
+                    {% block herotitle %}{% endblock herotitle %}
+                </h1>
+                <h2 class="subtitle is-6">
+                    {% block herosubtitle %}{% endblock herosubtitle %}
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        {% block content %}{% endblock content %}
+    </section>
+</body>
+
+</html>
