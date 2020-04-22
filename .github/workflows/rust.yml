@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install SQLite
+      run: sudo apt-get install libsqlite3-dev
     - name: Use nightly
       run: rustup default nightly
     - name: Build
