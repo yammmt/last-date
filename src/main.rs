@@ -13,7 +13,7 @@ mod task;
 use rocket::Rocket;
 use rocket::fairing::AdHoc;
 use rocket::request::{Form, FlashMessage};
-// use rocket::response::{Flash, Redirect};
+use rocket::response::{Flash, Redirect};
 use rocket_contrib::{templates::Template, serve::StaticFiles};
 use diesel::SqliteConnection;
 
@@ -40,14 +40,14 @@ impl<'a, 'b> Context<'a, 'b> {
 // TODO: add `update` and `delete`
 
 #[post("/", data = "<task_form>")]
-fn new(task_form: Form<TaskName>, conn: DbConn) -> Template {
+fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
     let task = task_form.into_inner();
     if task.name.is_empty() {
-        Template::render("index", &Context::err(&conn, "Please input task name."))
+        Flash::warning(Redirect::to("/"), "Please input task name.")
     } else if Task::insert(task, &conn) {
-        Template::render("index", Context::raw(&conn, None))
+        Flash::success(Redirect::to("/"), "New task added.")
     } else {
-        Template::render("index", &Context::err(&conn, "The server failed."))
+        Flash::warning(Redirect::to("/"), "The server failed.")
     }
 }
 
