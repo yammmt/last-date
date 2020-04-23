@@ -33,7 +33,7 @@ impl<'a, 'b> Context<'a, 'b> {
     }
 
     pub fn raw(conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> Context<'a, 'b> {
-        Context{ msg: msg, tasks: Task::all(conn) }
+        Context{ msg, tasks: Task::all(conn) }
     }
 }
 
