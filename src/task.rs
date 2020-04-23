@@ -24,10 +24,8 @@ pub struct Task {
 }
 
 #[derive(FromForm)]
-// TODO: more useful name
-pub struct TaskForm {
+pub struct TaskName {
     pub name: String,
-    pub description: String,
 }
 
 impl Task {
@@ -37,9 +35,9 @@ impl Task {
         all_tasks.order(tasks::id.desc()).load::<Task>(conn).unwrap()
     }
 
-    pub fn insert(taskform: TaskForm, conn: &SqliteConnection) -> bool {
+    pub fn insert(task_name: TaskName, conn: &SqliteConnection) -> bool {
         // TODO: consider `update_at`
-        let t = Task { id: None, name: taskform.name, description: "".to_string() };
+        let t = Task { id: None, name: task_name.name, description: "".to_string() };
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 

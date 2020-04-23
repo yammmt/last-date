@@ -10,6 +10,11 @@
 
 {% block content %}
     <div class="container">
+        <form class="inline" action="/" method="post">
+            <input type="text" placeholder="new task name?"
+                name="name" id="name" value="" autofocus>
+            <button class="button is-small is-info is-light" type="submit">add</button>
+        </form>
         <table class="table">
             <thead>
                 <tr>

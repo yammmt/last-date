@@ -17,7 +17,7 @@ use rocket::request::{Form, FlashMessage};
 use rocket_contrib::{templates::Template, serve::StaticFiles};
 use diesel::SqliteConnection;
 
-use task::{Task};
+use task::{Task, TaskName};
 
 embed_migrations!();
 
@@ -37,7 +37,19 @@ impl<'a, 'b> Context<'a, 'b> {
     }
 }
 
-// TODO: add `post` and `delete`
+// TODO: add `update` and `delete`
+
+#[post("/", data = "<task_form>")]
+fn new(task_form: Form<TaskName>, conn: DbConn) -> Template {
+    let task = task_form.into_inner();
+    if task.name.is_empty() {
+        Template::render("index", &Context::err(&conn, "Please input task name."))
+    } else if Task::insert(task, &conn) {
+        Template::render("index", Context::raw(&conn, None))
+    } else {
+        Template::render("index", &Context::err(&conn, "The server failed."))
+    }
+}
 
 #[get("/")]
 fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
@@ -63,7 +75,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index])
+        .mount("/", routes![index, new])
         .attach(Template::fairing())
 }
 
