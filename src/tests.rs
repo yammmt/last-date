@@ -28,6 +28,21 @@ macro_rules! run_test {
 }
 
 #[test]
+fn index_page() {
+    run_test!(|client, _conn| {
+        // Ensure we can access index page
+        let mut res = client.get("/").dispatch();
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure index shows correct task table.
+        let body = res.body_string().unwrap();
+        assert!(body.contains("name"));
+        assert!(body.contains("Update to today"));
+        // TODO: Ensure the number of table row reflects the number of tasks.
+    })
+}
+
+#[test]
 fn test_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the tasks before making changes.
