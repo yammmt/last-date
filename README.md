@@ -22,6 +22,12 @@ cargo install diesel_cli --no-default-features --features sqlite
 export DATABASE_URL=db/mydb.sqlite # if needed
 ```
 
+To use database file different from one defined in `Rocket.toml`, set environment variable.
+```bash
+export ROCKET_DATABASES='{sqlite_database={url="db/mydb.sqlite"}}'
+```
+Note that this setting is common between `cargo run` and `cargo test`.
+
 Use clippy for code lint.
 ```bash
 cargo clippy
