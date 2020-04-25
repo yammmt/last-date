@@ -31,7 +31,6 @@ pub struct TaskName {
 impl Task {
     pub fn all(conn: &SqliteConnection) -> Vec<Task> {
         // TODO: order by `updated_at`
-        // FIXME: unexpected `Err` value
         all_tasks.order(tasks::id.desc()).load::<Task>(conn).unwrap()
     }
 
