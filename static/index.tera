@@ -26,7 +26,6 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Desciprion</th>
                     <th>Last updated</th>
                     <th>Update to today</th>
                 </tr>
@@ -34,7 +33,6 @@
                 {% for task in tasks %}
                     <tr>
                         <td>{{ task.name }}</td>
-                        <td>{{ task.description }}</td>
                         <td>{{ task.updated_at }}</td>
                         <td>
                             <form class="inline" action="{{ task.id }}" method="post">
