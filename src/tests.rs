@@ -84,7 +84,7 @@ fn test_many_insertions() {
                 .body(format!("name={}", desc))
                 .dispatch();
 
-            // Record the description we choose for this iteration.
+            // Record the name we choose for this iteration.
             descs.insert(0, desc);
 
             // Ensure the task was inserted properly and all other tasks remain.

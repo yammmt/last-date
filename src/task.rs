@@ -4,7 +4,7 @@ use diesel::{self, prelude::*};
 mod schema {
     table! {
         tasks {
-            // TODO: allow Nullable desciption
+            // TODO: allow Nullable description
             id -> Nullable<Integer>, // primary key
             name -> Text,
             description -> Text,
