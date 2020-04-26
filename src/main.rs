@@ -37,7 +37,7 @@ impl<'a, 'b> Context<'a, 'b> {
     }
 }
 
-// TODO: add `update` and `delete`
+// TODO: add `delete`
 
 #[post("/", data = "<task_form>")]
 fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
@@ -59,6 +59,15 @@ fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
     })
 }
 
+#[post("/<id>/date")]
+fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
+    if Task::update_to_today(id, &conn) {
+        Flash::success(Redirect::to("/"), "\"Last updated\" date is updated to today.")
+    } else {
+        Flash::warning(Redirect::to("/"), "The server failed.")
+    }
+}
+
 fn run_db_migrations(rocket: Rocket)  -> Result<Rocket, Rocket> {
     let conn = DbConn::get_one(&rocket).expect("database connection");
     match embedded_migrations::run(&*conn) {
@@ -75,7 +84,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new])
+        .mount("/", routes![index, new, update_date])
         .attach(Template::fairing())
 }
 

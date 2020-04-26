@@ -49,6 +49,28 @@ impl Task {
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 
+    #[cfg(test)]
+    pub fn insert_with_old_date(dummy_name: &str, conn: &SqliteConnection) -> bool {
+        let t = Task { id: None, name: dummy_name.to_string(), description: "".to_string(), updated_at: "2000-01-01".to_string() };
+        diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
+    }
+
+    #[cfg(test)]
+    pub fn id_by_name(target_name: &str, conn: &SqliteConnection) -> i32 {
+        // Are there more comfortable ways?
+        all_tasks.filter(tasks::name.eq(target_name)).load::<Task>(conn).unwrap().first().unwrap().id.unwrap()
+    }
+
+    #[cfg(test)]
+    pub fn updated_at_by_id(target_id: i32, conn: &SqliteConnection) -> String {
+        all_tasks.find(target_id).load::<Task>(conn).unwrap().first().unwrap().updated_at.clone()
+    }
+
+    pub fn update_to_today(id: i32, conn: &SqliteConnection) -> bool {
+        let dt = Local::today().naive_local();
+        diesel::update(all_tasks.find(id)).set(tasks::updated_at.eq(dt.to_string())).execute(conn).is_ok()
+    }
+
     pub fn delete_with_id(id: i32, conn: &SqliteConnection) -> bool {
         diesel::delete(all_tasks.find(id)).execute(conn).is_ok()
     }

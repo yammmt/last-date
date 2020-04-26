@@ -35,8 +35,8 @@
                         <td>{{ task.name }}</td>
                         <td>{{ task.updated_at }}</td>
                         <td>
-                            <form class="inline" action="{{ task.id }}" method="post">
-                                <input type="hidden" name="_method" value="put" />
+                            <form class="inline" action="{{ task.id }}/date" method="post">
+                                <input type="hidden" name="_method" value="post" />
                                 <button class="button is-small is-primary is-light" type="submit">update</button>
                             </form>
                         </td>

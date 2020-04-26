@@ -134,3 +134,23 @@ fn test_bad_form_submissions() {
         assert!(cookies.any(|value| value.contains("warning")));
     })
 }
+
+#[test]
+fn test_update_date() {
+    run_test!(|client, conn| {
+        // Create new task with old `updated_at`.
+        let mut rng = thread_rng();
+        let rng_name: String = rng.sample_iter(&Alphanumeric).take(7).collect();
+        let t = Task::insert_with_old_date(&rng_name, &conn);
+        assert!(t);
+
+        // Ensure `updated_at` of created task is updated to today.
+        let inserted_id = Task::id_by_name(&rng_name, &conn);
+        let res = client.post(format!("/{}/date", inserted_id.to_string())).dispatch();
+        let mut cookies = res.headers().get("Set-Cookie");
+        let updated_date  = Task::updated_at_by_id(inserted_id, &conn);
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("success")));
+        assert_eq!(updated_date, Local::today().naive_local().to_string());
+    })
+}
