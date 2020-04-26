@@ -11,6 +11,7 @@ use self::rand::{Rng, thread_rng, distributions::Alphanumeric};
 
 use rocket::local::Client;
 use rocket::http::{Status, ContentType};
+use chrono::Local;
 
 static DB_LOCK: Mutex<()> = Mutex::new(());
 
@@ -61,6 +62,7 @@ fn test_insertion_deletion() {
         // Ensure the task is what we expect.
         assert_eq!(new_tasks[0].name, "test task");
         assert_eq!(new_tasks[0].description, "");
+        assert_eq!(new_tasks[0].updated_at, Local::today().naive_local().to_string());
     })
 }
 

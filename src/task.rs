@@ -1,13 +1,14 @@
+use chrono::Local;
 use diesel::{self, prelude::*};
 
 mod schema {
     table! {
         tasks {
-            // TODO: add `updated_at`
             // TODO: allow Nullable desciption
             id -> Nullable<Integer>, // primary key
             name -> Text,
             description -> Text,
+            updated_at -> Timestamp,
         }
     }
 }
@@ -21,6 +22,7 @@ pub struct Task {
     pub id: Option<i32>,
     pub name: String,
     pub description: String,
+    pub updated_at: String,
 }
 
 #[derive(FromForm)]
@@ -35,8 +37,8 @@ impl Task {
     }
 
     pub fn insert(task_name: TaskName, conn: &SqliteConnection) -> bool {
-        // TODO: consider `update_at`
-        let t = Task { id: None, name: task_name.name, description: "".to_string() };
+        let dt = Local::today().naive_local();
+        let t = Task { id: None, name: task_name.name, description: "".to_string(), updated_at: dt.to_string() };
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 
