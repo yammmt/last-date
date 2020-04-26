@@ -38,6 +38,7 @@ fn index_page() {
         // Ensure index shows correct task table.
         let body = res.body_string().unwrap();
         assert!(body.contains("name"));
+        assert!(body.contains("Last updated"));
         assert!(body.contains("Update to today"));
         // TODO: Ensure the number of table row reflects the number of tasks.
     })
@@ -87,11 +88,11 @@ fn test_many_insertions() {
             descs.insert(0, desc);
 
             // Ensure the task was inserted properly and all other tasks remain.
-            let tasks = Task::all(&conn);
+            let tasks = Task::all_by_id(&conn);
             assert_eq!(tasks.len(), init_num + i + 1);
 
             for j in 0..i {
-                assert_eq!(descs[j], tasks[j].name)
+                assert_eq!(descs[j], tasks[j].name);
             }
         }
     })

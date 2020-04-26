@@ -32,7 +32,14 @@ pub struct TaskName {
 
 impl Task {
     pub fn all(conn: &SqliteConnection) -> Vec<Task> {
-        // TODO: order by `updated_at`
+        // Task hasn't been done for a long time should be in the top.
+        all_tasks.order(tasks::updated_at.asc()).load::<Task>(conn).unwrap()
+    }
+
+    #[cfg(test)]
+    pub fn all_by_id(conn: &SqliteConnection) -> Vec<Task> {
+        // I don't know why sometimes `all` called by `test_many_insertions`
+        // invites SIGSEGV: invalid memory reference error...
         all_tasks.order(tasks::id.desc()).load::<Task>(conn).unwrap()
     }
 
