@@ -108,7 +108,6 @@ fn test_bad_form_submissions() {
             .dispatch();
 
         let mut cookies = res.headers().get("Set-Cookie");
-        println!("{:?}", res.status());
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
 
@@ -118,7 +117,6 @@ fn test_bad_form_submissions() {
             .dispatch();
 
         let mut cookies = res.headers().get("Set-Cookie");
-        println!("{:?}", res.status());
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
 
