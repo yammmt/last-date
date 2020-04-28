@@ -44,6 +44,10 @@
                 </div>
             </form>
         </div>
+
+        <div class="container">
+            <button class="button is-danger is-light" onclick="location.href='{{ task.id }}/confirm'">Delete this task</button>
+        </div>
     </section>
 
     <section class="section">

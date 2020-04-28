@@ -46,8 +46,6 @@ impl<'a, 'b> SingleTaskContext<'a, 'b> {
     }
 }
 
-// TODO: add `delete`
-
 #[post("/", data = "<task_form>")]
 fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
     let task = task_form.into_inner();
@@ -98,6 +96,20 @@ fn update(id: i32, task_update_form: Form<TaskUpdate>, conn: DbConn) -> Flash<Re
     }
 }
 
+#[get("/<id>/confirm")]
+fn confirm(id: i32, conn: DbConn) -> Template {
+    Template::render("confirm", SingleTaskContext::raw(id, &conn, None))
+}
+
+#[delete("/<id>")]
+fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
+    if Task::delete_with_id(id, &conn) {
+        Ok(Flash::success(Redirect::to("/"), "Your task was deleted."))
+    } else {
+        Err(Template::render("detail", &Context::err(&conn, "Couldn't delete task.")))
+    }
+}
+
 fn run_db_migrations(rocket: Rocket)  -> Result<Rocket, Rocket> {
     let conn = DbConn::get_one(&rocket).expect("database connection");
     match embedded_migrations::run(&*conn) {
@@ -114,7 +126,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm])
         .attach(Template::fairing())
 }
 

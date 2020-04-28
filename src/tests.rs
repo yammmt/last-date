@@ -72,6 +72,34 @@ fn detail_page() {
 }
 
 #[test]
+fn confirm_page() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "confirmpagetest".to_string();
+        client.post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch();
+        let inserted_id = Task::id_by_name(&task_name, &conn);
+
+        // Ensure we can access detail page.
+        let mut res = client.get(format!("/{}/confirm", inserted_id)).dispatch();
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure confirm page shows buttons
+        let body = res.body_string().unwrap();
+        assert!(body.contains(
+            r#"<button class="button is-danger is-light" type="submit">Delete</button>"#
+        ));
+        // If I write full button HTML, `cargo test` hangs up. I don't know why.
+        assert!(body.contains("Back to task</button>"));
+        assert!(body.contains(
+            r#"<button class="button is-link is-light" onclick="location.href='/'">Back to index page</button>"#
+        ));
+    })
+}
+
+#[test]
 fn test_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the tasks before making changes.
@@ -91,6 +119,17 @@ fn test_insertion_deletion() {
         assert_eq!(new_tasks[0].name, "test task");
         assert_eq!(new_tasks[0].description, "");
         assert_eq!(new_tasks[0].updated_at, Local::today().naive_local().to_string());
+
+        // Delete task.
+        let id = new_tasks[0].id.unwrap();
+        client.delete(format!("/{}", id)).dispatch();
+
+        // Ensure task was deleted.
+        let final_tasks = Task::all(&conn);
+        assert_eq!(final_tasks.len(), init_tasks.len());
+        if final_tasks.len() > 0 {
+            assert_ne!(final_tasks[0].name, "test task");
+        }
     })
 }
 
