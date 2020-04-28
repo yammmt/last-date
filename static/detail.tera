@@ -1,0 +1,54 @@
+{% extends "base" %}
+
+{% block title %}detail | last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            {% if msg %}
+                <div class="notification is-{{ msg.0 }} is-light">
+                    {{ msg.1 }}
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ task.id }}">
+                <div class="field">
+                    <label class="label">Task name</label>
+                    <div class="control">
+                        <input class="input" name="name" type="text" value="{{ task.name }}">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Description</label>
+                    <textarea class="textarea" name="description">{{ task.description }}</textarea>
+                </div>
+
+                <div class="field">
+                    <label class="label">Last updated</label>
+                    <div class="control">
+                        <input class="input" name="updated_at" type="text" value="{{ task.updated_at }}" readonly>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary is-light" type="submit">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>
+        </div>
+    </section>
+{% endblock content %}

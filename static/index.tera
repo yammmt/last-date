@@ -33,7 +33,7 @@
                     <tbody>
                     {% for task in tasks %}
                         <tr>
-                            <td>{{ task.name }}</td>
+                            <td><a href="{{ task.id }}">{{ task.name }}</a></td>
                             <td>{{ task.updated_at }}</td>
                             <td>
                                 <form class="inline" action="{{ task.id }}/date" method="post">

@@ -45,6 +45,33 @@ fn index_page() {
 }
 
 #[test]
+fn detail_page() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "detailpagetest".to_string();
+        client.post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch();
+        let inserted_id = Task::id_by_name(&task_name, &conn);
+
+        // Ensure we can access detail page.
+        let mut res = client.get(format!("/{}", inserted_id)).dispatch();
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure detail page shows required fields.
+        let body = res.body_string().unwrap();
+        assert!(body.contains("Task name"));
+        assert!(body.contains("Description"));
+        assert!(body.contains("Last updated"));
+        assert!(body.contains(r#"<button class="button is-primary is-light" type="submit">Update</button>"#));
+        assert!(body.contains(
+            r#"<button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>"#
+        ));
+    })
+}
+
+#[test]
 fn test_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the tasks before making changes.
@@ -99,7 +126,7 @@ fn test_many_insertions() {
 }
 
 #[test]
-fn test_bad_form_submissions() {
+fn test_bad_new_task_form_submissions() {
     run_test!(|client, _conn| {
         // Submit an **empty** form. This is an unexpected pattern
         // because task form in index page has `name` field.
@@ -134,6 +161,51 @@ fn test_bad_form_submissions() {
 }
 
 #[test]
+fn test_bad_update_form_submissions() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "detailformtest".to_string();
+        client.post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch();
+        let inserted_id = Task::id_by_name(&task_name, &conn);
+        let post_url = format!("/{}", inserted_id);
+
+        // Submit an **empty** form. This is an unexpected pattern
+        // because task form in detail page has some fields.
+        let res = client.post(&post_url)
+            .header(ContentType::Form)
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::UnprocessableEntity);
+        assert!(!cookies.any(|value| value.contains("warning")));
+
+        // Submit a form without a name field. This is same as just above pattern.
+        let res = client.post(&post_url)
+            .header(ContentType::Form)
+            .body("description=hello")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::UnprocessableEntity);
+        assert!(!cookies.any(|value| value.contains("warning")));
+
+        // Submit a form with an empty name. We look for `warning` in the
+        // cookies which corresponds to flash message being set as a warning.
+        let res = client.post(&post_url)
+            .header(ContentType::Form)
+            .body("name=&description=hello&updated_at=2020-04-28")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+    })
+}
+
+#[test]
 fn test_update_date() {
     run_test!(|client, conn| {
         // Create new task with old `updated_at`.
@@ -150,5 +222,34 @@ fn test_update_date() {
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
         assert_eq!(updated_date, Local::today().naive_local().to_string());
+    })
+}
+
+#[test]
+fn test_update_task() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name = "updatetasktest".to_string();
+        let t = Task::insert_with_old_date(&task_name, &conn);
+        assert!(t);
+
+        // Submit valid update form. Note that `updated_at` field isn't updated.
+        let inserted_id = Task::id_by_name(&task_name, &conn);
+        let task_description = "newdescription".to_string();
+        let dt = Local::today().naive_local().to_string();
+        let form_data = format!("name={}&description={}&updated_at={}", task_name, task_description, dt);
+        let res = client.post(format!("/{}", inserted_id))
+            .header(ContentType::Form)
+            .body(form_data)
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("success")));
+
+        let updated_task = Task::task_by_id(inserted_id, &conn);
+        assert_eq!(updated_task.name, task_name);
+        assert_eq!(updated_task.description, task_description);
+        assert_ne!(updated_task.updated_at, dt);
     })
 }

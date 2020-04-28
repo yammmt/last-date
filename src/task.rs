@@ -30,6 +30,13 @@ pub struct TaskName {
     pub name: String,
 }
 
+#[derive(FromForm)]
+pub struct TaskUpdate {
+    pub name: String,
+    pub description: String,
+    pub updated_at: String,
+}
+
 impl Task {
     pub fn all(conn: &SqliteConnection) -> Vec<Task> {
         // Task hasn't been done for a long time should be in the top.
@@ -41,6 +48,10 @@ impl Task {
         // I don't know why sometimes `all` called by `test_many_insertions`
         // invites SIGSEGV: invalid memory reference error...
         all_tasks.order(tasks::id.desc()).load::<Task>(conn).unwrap()
+    }
+
+    pub fn task_by_id(id: i32, conn: &SqliteConnection) -> Task {
+        all_tasks.find(id).load::<Task>(conn).unwrap().first().unwrap().clone()
     }
 
     pub fn insert(task_name: TaskName, conn: &SqliteConnection) -> bool {
@@ -64,6 +75,16 @@ impl Task {
     #[cfg(test)]
     pub fn updated_at_by_id(target_id: i32, conn: &SqliteConnection) -> String {
         all_tasks.find(target_id).load::<Task>(conn).unwrap().first().unwrap().updated_at.clone()
+    }
+
+    // Via this function, `updated_at` isn't updated because both task name and
+    // description don't change the date its task was done.
+    pub fn update(id: i32, task: TaskUpdate, conn: &SqliteConnection) -> bool {
+        diesel::update(all_tasks.find(id))
+            .set((
+                tasks::name.eq(task.name),
+                tasks::description.eq(task.description)
+            )).execute(conn).is_ok()
     }
 
     pub fn update_to_today(id: i32, conn: &SqliteConnection) -> bool {
