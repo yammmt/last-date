@@ -7,11 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock title %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
+    <style type="text/css">
+        .section { padding: 1rem 1.5rem; }
+    </style>
     {% endblock head %}
 </head>
 
 <body>
-    <section class="hero is-primary is-bold">
+    <section class="hero is-primary is-bold is-small">
         <div class="hero-body">
             <div class="container">
                 <h1 class="title">
