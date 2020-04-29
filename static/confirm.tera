@@ -14,6 +14,7 @@
             <div class="a">
                 Your task <b>{{ task.name }}</b> is deleted. Are you sure?
             </div>
+        </div>
 
         <div class="container">
             <form class="inline" action="/{{ task.id }}" method="post">
