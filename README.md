@@ -13,6 +13,18 @@ rustup override set nightly
 cargo run
 ```
 
+### As production
+
+If you want to run this in production environment, for example, run following commands.
+```bash
+export ROCKET_SECRET_KEY=<your secret key>
+export ROCKET_ENV=production
+cargo run --release
+```
+
+You can access your site by accessing `http://<your machine address>:8000`.  
+Note that you can generate secret key with `openssl rand -base64 32`.
+
 ### For developer
 
 To use [Diesel](https://github.com/diesel-rs/diesel) from command line, diesel-cli is needed.
