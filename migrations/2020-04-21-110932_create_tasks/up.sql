@@ -4,5 +4,5 @@ CREATE TABLE tasks (
     description VARCHAR NOT NULL
 );
 
-INSERT INTO tasks (name, description) VALUES ("foo", "demo task");
-INSERT INTO tasks (name, description) VALUES ("bar", "");
+INSERT INTO tasks (name, description) VALUES ("🧹🚽", "");
+INSERT INTO tasks (name, description) VALUES ("🍔", "Both of McD and MOS are okay");
