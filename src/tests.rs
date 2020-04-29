@@ -256,6 +256,8 @@ fn test_update_date() {
         // Ensure `updated_at` of created task is updated to today.
         let new_tasks = Task::all(&conn);
         let today_str = Local::today().naive_local().to_string();
+        // First, ensure current task date is not today.
+        assert_ne!(new_tasks[0].updated_at, today_str);
 
         let inserted_id = new_tasks[0].id.unwrap(); // `id` is `Nullable`
         let res = client.post(format!("/{}/date", inserted_id)).dispatch();
