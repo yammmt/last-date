@@ -66,17 +66,6 @@ impl Task {
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 
-    #[cfg(test)]
-    pub fn id_by_name(target_name: &str, conn: &SqliteConnection) -> i32 {
-        // Are there more comfortable ways?
-        all_tasks.filter(tasks::name.eq(target_name)).load::<Task>(conn).unwrap().first().unwrap().id.unwrap()
-    }
-
-    #[cfg(test)]
-    pub fn updated_at_by_id(target_id: i32, conn: &SqliteConnection) -> String {
-        all_tasks.find(target_id).load::<Task>(conn).unwrap().first().unwrap().updated_at.clone()
-    }
-
     // Via this function, `updated_at` isn't updated because both task name and
     // description don't change the date its task was done.
     pub fn update(id: i32, task: TaskUpdate, conn: &SqliteConnection) -> bool {

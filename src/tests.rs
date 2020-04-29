@@ -53,7 +53,7 @@ fn detail_page() {
             .header(ContentType::Form)
             .body(format!("name={}", task_name))
             .dispatch();
-        let inserted_id = Task::id_by_name(&task_name, &conn);
+        let inserted_id = Task::all(&conn)[0].id.unwrap();
 
         // Ensure we can access detail page.
         let mut res = client.get(format!("/{}", inserted_id)).dispatch();
@@ -80,7 +80,7 @@ fn confirm_page() {
             .header(ContentType::Form)
             .body(format!("name={}", task_name))
             .dispatch();
-        let inserted_id = Task::id_by_name(&task_name, &conn);
+        let inserted_id = Task::all(&conn)[0].id.unwrap();
 
         // Ensure we can access detail page.
         let mut res = client.get(format!("/{}/confirm", inserted_id)).dispatch();
@@ -208,7 +208,7 @@ fn test_bad_update_form_submissions() {
             .header(ContentType::Form)
             .body(format!("name={}", task_name))
             .dispatch();
-        let inserted_id = Task::id_by_name(&task_name, &conn);
+        let inserted_id = Task::all(&conn)[0].id.unwrap();
         let post_url = format!("/{}", inserted_id);
 
         // Submit an **empty** form. This is an unexpected pattern
@@ -254,13 +254,16 @@ fn test_update_date() {
         assert!(t);
 
         // Ensure `updated_at` of created task is updated to today.
-        let inserted_id = Task::id_by_name(&rng_name, &conn);
-        let res = client.post(format!("/{}/date", inserted_id.to_string())).dispatch();
+        let new_tasks = Task::all(&conn);
+        let today_str = Local::today().naive_local().to_string();
+
+        let inserted_id = new_tasks[0].id.unwrap(); // `id` is `Nullable`
+        let res = client.post(format!("/{}/date", inserted_id)).dispatch();
         let mut cookies = res.headers().get("Set-Cookie");
-        let updated_date  = Task::updated_at_by_id(inserted_id, &conn);
+        let final_tasks = Task::all(&conn);
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
-        assert_eq!(updated_date, Local::today().naive_local().to_string());
+        assert_eq!(final_tasks[0].updated_at, today_str);
     })
 }
 
@@ -273,7 +276,7 @@ fn test_update_task() {
         assert!(t);
 
         // Submit valid update form. Note that `updated_at` field isn't updated.
-        let inserted_id = Task::id_by_name(&task_name, &conn);
+        let inserted_id = Task::all(&conn)[0].id.unwrap();
         let task_description = "newdescription".to_string();
         let dt = Local::today().naive_local().to_string();
         let form_data = format!("name={}&description={}&updated_at={}", task_name, task_description, dt);
