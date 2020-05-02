@@ -9,6 +9,7 @@ mod schema {
             name -> Text,
             description -> Text,
             updated_at -> Timestamp,
+            label_id -> Nullable<Integer>, // foreign key
         }
     }
 }
@@ -16,13 +17,17 @@ mod schema {
 use self::schema::tasks;
 use self::schema::tasks::dsl::tasks as all_tasks;
 
+use crate::label::Label;
+
 #[table_name="tasks"]
-#[derive(Serialize, Queryable, Insertable, Debug, Clone)]
+#[belongs_to(Label, foreign_key = "label_id")]
+#[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
 pub struct Task {
     pub id: Option<i32>,
     pub name: String,
     pub description: String,
     pub updated_at: String,
+    pub label_id: Option<i32>,
 }
 
 #[derive(FromForm)]
@@ -56,13 +61,13 @@ impl Task {
 
     pub fn insert(task_name: TaskName, conn: &SqliteConnection) -> bool {
         let dt = Local::today().naive_local();
-        let t = Task { id: None, name: task_name.name, description: "".to_string(), updated_at: dt.to_string() };
+        let t = Task { id: None, name: task_name.name, description: "".to_string(), updated_at: dt.to_string(), label_id: None };
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 
     #[cfg(test)]
     pub fn insert_with_old_date(dummy_name: &str, conn: &SqliteConnection) -> bool {
-        let t = Task { id: None, name: dummy_name.to_string(), description: "".to_string(), updated_at: "2000-01-01".to_string() };
+        let t = Task { id: None, name: dummy_name.to_string(), description: "".to_string(), updated_at: "2000-01-01".to_string(), label_id: None };
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 

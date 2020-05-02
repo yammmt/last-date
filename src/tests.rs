@@ -37,6 +37,7 @@ fn index_page() {
 
         // Ensure index shows correct task table.
         let body = res.body_string().unwrap();
+        assert!(body.contains("Label"));
         assert!(body.contains("name"));
         assert!(body.contains("Last updated"));
         assert!(body.contains("Update to today"));
@@ -61,6 +62,7 @@ fn detail_page() {
 
         // Ensure detail page shows required fields.
         let body = res.body_string().unwrap();
+        assert!(body.contains("Label"));
         assert!(body.contains("Task name"));
         assert!(body.contains("Description"));
         assert!(body.contains("Last updated"));
@@ -119,6 +121,7 @@ fn test_insertion_deletion() {
         assert_eq!(new_tasks[0].name, "test task");
         assert_eq!(new_tasks[0].description, "");
         assert_eq!(new_tasks[0].updated_at, Local::today().naive_local().to_string());
+        assert_eq!(new_tasks[0].label_id, None);
 
         // Delete task.
         let id = new_tasks[0].id.unwrap();

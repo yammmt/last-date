@@ -19,6 +19,24 @@
 
             <form method="post" action="{{ task.id }}">
                 <div class="field">
+                    <label class="label">Label</label>
+                    <div class="control">
+                        {% if task.label_id %}
+                        {% for label in labels %}
+                        {% if label.id == task.label_id %}
+                        {# TODO: remove readonly #}
+                        {# TODO: show color #}
+                        <input class="input" name="label_id" type="text" value="{{ label.name }}" readonly>
+                        {% break %}
+                        {% endif %}
+                        {% endfor %}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="field">
                     <label class="label">Task name</label>
                     <div class="control">
                         <input class="input" name="name" type="text" value="{{ task.name }}">

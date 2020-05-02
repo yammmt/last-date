@@ -7,6 +7,7 @@
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate rocket_contrib;
 
+mod label;
 mod task;
 #[cfg(test)] mod tests;
 
@@ -16,7 +17,9 @@ use rocket::request::{Form, FlashMessage};
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::{templates::Template, serve::StaticFiles};
 use diesel::SqliteConnection;
+use diesel::Connection;
 
+use label::{Label};
 use task::{Task, TaskName, TaskUpdate};
 
 embed_migrations!();
@@ -25,24 +28,24 @@ embed_migrations!();
 pub struct DbConn(SqliteConnection);
 
 #[derive(Debug, Serialize)]
-struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task> }
+struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
-struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task }
+struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
 
 impl<'a, 'b> Context<'a, 'b> {
     pub fn err(conn: &DbConn, msg: &'a str) -> Context<'static, 'a> {
-        Context{ msg: Some(("warning", msg)), tasks: Task::all(conn) }
+        Context{ msg: Some(("warning", msg)), tasks: Task::all(conn), labels: Label::all(conn) }
     }
 
     pub fn raw(conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> Context<'a, 'b> {
-        Context{ msg, tasks: Task::all(conn) }
+        Context{ msg, tasks: Task::all(conn), labels: Label::all(conn) }
     }
 
 }
 
 impl<'a, 'b> SingleTaskContext<'a, 'b> {
     pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> SingleTaskContext<'a, 'b> {
-        SingleTaskContext{ msg, task: Task::task_by_id(id, conn) }
+        SingleTaskContext{ msg, task: Task::task_by_id(id, conn), labels: Label::all(conn) }
     }
 }
 
@@ -112,8 +115,17 @@ fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
 
 fn run_db_migrations(rocket: Rocket)  -> Result<Rocket, Rocket> {
     let conn = DbConn::get_one(&rocket).expect("database connection");
+    // TODO: Do foreign keys work?
     match embedded_migrations::run(&*conn) {
-        Ok(()) => Ok(rocket),
+        Ok(()) =>  {
+            match conn.execute("PRAGMA foreign_keys = ON") {
+                Ok(_) => Ok(rocket),
+                Err(e) => {
+                    error!("Failed to enable foreign keys: {:?}", e);
+                    Err(rocket)
+                }
+            }
+        },
         Err(e) => {
             error!("Failed to run database migrations: {:?}", e);
             Err(rocket)
