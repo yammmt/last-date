@@ -5,6 +5,7 @@
 extern crate parking_lot;
 extern crate rand;
 
+use super::label::Label;
 use super::task::Task;
 use self::parking_lot::Mutex;
 use self::rand::{Rng, thread_rng, distributions::Alphanumeric};
@@ -23,6 +24,7 @@ macro_rules! run_test {
         let $client = Client::new(rocket).expect("Rocket client");
         let $conn = db.expect("failed to get database connection for testing");
         assert!(Task::delete_all(&$conn), "failed to delete all tasks for testing");
+        assert!(Label::delete_all(&$conn), "failed to delete all labels for testing");
 
         $block
     })
@@ -42,6 +44,32 @@ fn index_page() {
         assert!(body.contains("Last updated"));
         assert!(body.contains("Update to today"));
         // TODO: Ensure the number of table row reflects the number of tasks.
+    })
+}
+
+#[test]
+fn label_list_page() {
+    run_test!(|client, conn| {
+        // TODO: use rand for hex color code, too
+        let mut rng = thread_rng();
+        let name: String = rng.sample_iter(&Alphanumeric).take(6).collect();
+
+        // Ensure we can access label list page
+        let mut res = client.get("/label").dispatch();
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(!body.contains(&name));
+
+        // Ensure created label is shown in label list page
+        client.post("/label")
+            .header(ContentType::Form)
+            .body(format!("name={}&color=#ababab", name))
+            .dispatch();
+
+        let mut res = client.get("/label").dispatch();
+        assert_eq!(res.status(), Status::Ok);
+        let body = res.body_string().unwrap();
+        assert!(body.contains(&name));
     })
 }
 
@@ -137,6 +165,28 @@ fn test_insertion_deletion() {
 }
 
 #[test]
+fn test_label_insertion() {
+    run_test!(|client, conn| {
+        // Get the labels before making changes.
+        let init_labels = Label::all(&conn);
+
+        // Insert new label.
+        client.post("/label")
+            .header(ContentType::Form)
+            .body("name=test+label&color=#ababab")
+            .dispatch();
+
+        // Ensure we have one more label in the DB.
+        let new_labels = Label::all(&conn);
+        assert_eq!(new_labels.len(), init_labels.len() + 1);
+
+        // Ensure the label is what we expect.
+        assert_eq!(new_labels[0].name, "test label");
+        assert_eq!(new_labels[0].color_hex, "#ababab");
+    })
+}
+
+#[test]
 fn test_many_insertions() {
     const ITER: usize = 100;
 
@@ -194,6 +244,94 @@ fn test_bad_new_task_form_submissions() {
         let res = client.post("/")
             .header(ContentType::Form)
             .body("name=")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+    })
+}
+
+#[test]
+fn test_bad_new_label_form_submissions() {
+    run_test!(|client, _conn| {
+        // Submit an **empty** form. This is an unexpected pattern
+        // because label form in index page has `name` and `color` field.
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .dispatch();
+
+            let mut cookies = res.headers().get("Set-Cookie");
+            assert_eq!(res.status(), Status::UnprocessableEntity);
+            assert!(!cookies.any(|value| value.contains("warning")));
+
+        // Submit a form without a name field.
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("color=#123456")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::UnprocessableEntity);
+        assert!(!cookies.any(|value| value.contains("warning")));
+
+        // Submit a form without a color field.
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("name=mylabel")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::UnprocessableEntity);
+        assert!(!cookies.any(|value| value.contains("warning")));
+
+        // Submit a form with an empty name. We look for `warning` in the
+        // cookies which corresponds to flash message being set as a warning.
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("name=&color=#ff00ff")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+
+        // Submit a form with an empty color. We look for `warning` in the
+        // cookies which corresponds to flash message being set as a warning.
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("name=mylabel&color=")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+
+        // Submit a form with an invalid color. We look for `warning` in the
+        // cookies which corresponds to flash message being set as a warning.
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("name=mylabel&color=red")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+
+        // Submit a form with invalid color (color code has 7 digits).
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("name=mylabel&color=#1234567")
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+
+        // Submit a form with invalid color (color code has 5 digits).
+        let res = client.post("/label")
+            .header(ContentType::Form)
+            .body("name=mylabel&color=#12345")
             .dispatch();
 
         let mut cookies = res.headers().get("Set-Cookie");

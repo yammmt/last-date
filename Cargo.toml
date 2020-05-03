@@ -17,6 +17,7 @@ diesel = { version = "^1.3", features = ["sqlite", "r2d2", "chrono"] }
 diesel_migrations = "^1.3"
 log = "^0.4"
 chrono = { version = "^0.4", features = ["serde"] }
+regex = "^1.3"
 
 [dev-dependencies]
 parking_lot = { version = "^0.8", features = ["nightly"] }

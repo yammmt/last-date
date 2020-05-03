@@ -7,10 +7,13 @@
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate rocket_contrib;
 
+extern crate regex;
+
 mod label;
 mod task;
 #[cfg(test)] mod tests;
 
+use regex::Regex;
 use rocket::Rocket;
 use rocket::fairing::AdHoc;
 use rocket::request::{Form, FlashMessage};
@@ -19,7 +22,7 @@ use rocket_contrib::{templates::Template, serve::StaticFiles};
 use diesel::SqliteConnection;
 use diesel::Connection;
 
-use label::{Label};
+use label::{Label, LabelForm};
 use task::{Task, TaskName, TaskUpdate};
 
 embed_migrations!();
@@ -75,6 +78,21 @@ fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
         Some(ref msg) => Context::raw(&conn, Some((msg.name(), msg.msg()))),
         None => Context::raw(&conn, None),
     })
+}
+
+#[post("/label", data = "<label_form>")]
+fn new_label(label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
+    let label = label_form.into_inner();
+    let color_code_regex = Regex::new(r"#[[:xdigit:]]{6}$").unwrap();
+    if label.name.is_empty() {
+        Flash::warning(Redirect::to("/label"), "Please input label name.")
+    } else if label.color.is_empty() || !color_code_regex.is_match(&label.color) {
+        Flash::warning(Redirect::to("/label"), "Please input label color with hex format.")
+    } else if Label::insert(label, &conn) {
+        Flash::success(Redirect::to("/label"), "New label added.")
+    } else {
+        Flash::warning(Redirect::to("/label"), "The server failed.")
+    }
 }
 
 #[get("/label")]
@@ -159,7 +177,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, tasks_by_label])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, new_label, tasks_by_label])
         .attach(Template::fairing())
 }
 
