@@ -31,6 +31,8 @@ pub struct DbConn(SqliteConnection);
 struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
 struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
+#[derive(Debug, Serialize)]
+struct TasksByLabelContext{ tasks: Vec<Task>, label: Label}
 
 impl<'a, 'b> Context<'a, 'b> {
     pub fn err(conn: &DbConn, msg: &'a str) -> Context<'static, 'a> {
@@ -46,6 +48,12 @@ impl<'a, 'b> Context<'a, 'b> {
 impl<'a, 'b> SingleTaskContext<'a, 'b> {
     pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> SingleTaskContext<'a, 'b> {
         SingleTaskContext{ msg, task: Task::task_by_id(id, conn), labels: Label::all(conn) }
+    }
+}
+
+impl TasksByLabelContext {
+    pub fn raw(label_id: i32, conn: &DbConn) -> TasksByLabelContext {
+        TasksByLabelContext{tasks: Task::tasks_by_label(label_id, conn), label: Label::label_by_id(label_id, conn)}
     }
 }
 
@@ -67,6 +75,11 @@ fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
         Some(ref msg) => Context::raw(&conn, Some((msg.name(), msg.msg()))),
         None => Context::raw(&conn, None),
     })
+}
+
+#[get("/label/<id>", rank = 0)]
+fn tasks_by_label(id: i32, conn: DbConn) -> Template {
+    Template::render("tasksbylabel", TasksByLabelContext::raw(id, &conn))
 }
 
 #[post("/<id>/date")]
@@ -99,7 +112,7 @@ fn update(id: i32, task_update_form: Form<TaskUpdate>, conn: DbConn) -> Flash<Re
     }
 }
 
-#[get("/<id>/confirm")]
+#[get("/<id>/confirm", rank = 1)]
 fn confirm(id: i32, conn: DbConn) -> Template {
     Template::render("confirm", SingleTaskContext::raw(id, &conn, None))
 }
@@ -138,7 +151,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, tasks_by_label])
         .attach(Template::fairing())
 }
 

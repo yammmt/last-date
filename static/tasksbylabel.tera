@@ -1,0 +1,50 @@
+{% extends "base" %}
+
+{% block title %}tasks by label | last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            Tasks belong to
+            <span class="tag is-medium" style="background-color: {{ label.color_hex }}">
+                {{ label.name }}
+            </span>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Last updated</th>
+                        <th>Update to today</th>
+                    </tr>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td><a href="../{{ task.id }}">{{ task.name }}</a></td>
+                            <td>{{ task.updated_at }}</td>
+                            <td>
+                                <form class="inline" action="{{ task.id }}/date" method="post">
+                                    <input type="hidden" name="_method" value="post" />
+                                    <button class="button is-small is-primary is-light" type="submit">update</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </thead>
+            </table>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>
+        </div>
+    </section>
+{% endblock content %}

@@ -59,6 +59,11 @@ impl Task {
         all_tasks.find(id).load::<Task>(conn).unwrap().first().unwrap().clone()
     }
 
+    pub fn tasks_by_label(label_id: i32, conn: &SqliteConnection) -> Vec<Task> {
+        let label = Label::label_by_id(label_id, conn);
+        Task::belonging_to(&label).order(tasks::name).load::<Task>(conn).unwrap()
+    }
+
     pub fn insert(task_name: TaskName, conn: &SqliteConnection) -> bool {
         let dt = Local::today().naive_local();
         let t = Task { id: None, name: task_name.name, description: "".to_string(), updated_at: dt.to_string(), label_id: None };
