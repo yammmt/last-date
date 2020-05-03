@@ -1,0 +1,46 @@
+{% extends "base" %}
+
+{% block title %}label | last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            {% if msg %}
+                <div class="notification is-{{ msg.0 }} is-light">
+                    {{ msg.1 }}
+                </div>
+            {% endif %}
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                    </tr>
+                    <tbody>
+                    {% for label in labels %}
+                        <tr>
+                            <td>
+                                <button class="button is-outlined" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ label.id }}'">
+                                    {{ label.name }}
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </thead>
+            </table>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>
+        </div>
+    </section>
+{% endblock content %}

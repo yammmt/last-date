@@ -77,6 +77,14 @@ fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
     })
 }
 
+#[get("/label")]
+fn label_list(msg: Option<FlashMessage>, conn: DbConn) -> Template {
+    Template::render("labellist", &match msg {
+        Some(ref msg) => Context::raw(&conn, Some((msg.name(), msg.msg()))),
+        None => Context::raw(&conn, None),
+    })
+}
+
 #[get("/label/<id>", rank = 0)]
 fn tasks_by_label(id: i32, conn: DbConn) -> Template {
     Template::render("tasksbylabel", TasksByLabelContext::raw(id, &conn))
@@ -151,7 +159,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, tasks_by_label])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, tasks_by_label])
         .attach(Template::fairing())
 }
 
