@@ -102,6 +102,52 @@ fn detail_page() {
 }
 
 #[test]
+fn tasks_by_label_page() {
+    let mut rng = thread_rng();
+    run_test!(|client, conn| {
+        // Create new tasks
+        let mut task_names: Vec<String> = Vec::with_capacity(3);
+        let mut task_ids: [i32; 3] = [0, 0, 0];
+        for i in 0..3 {
+            let rng_name: String = rng.sample_iter(&Alphanumeric).take(7).collect();
+            client.post("/")
+                .header(ContentType::Form)
+                .body(format!("name={}", rng_name))
+                .dispatch();
+            let inserted_id = Task::all(&conn)[i].id.unwrap();
+            task_names.push(rng_name);
+            task_ids[i] = inserted_id;
+        }
+
+        // Create a new label, too.
+        client.post("/label")
+            .header(ContentType::Form)
+            .body(format!("name=newlabel&color=#eeeeee"))
+            .dispatch();
+        let inserted_label_id = Label::all(&conn)[0].id.unwrap();
+
+        // Attach label to several tasks.
+        let dt = Local::today().naive_local().to_string();
+        for i in 0..2 {
+            let form_data = format!("name={}&description=&updated_at={}&label_id={}", &task_names[i], dt, inserted_label_id);
+            client.post(format!("/{}", task_ids[i]))
+                .header(ContentType::Form)
+                .body(form_data)
+                .dispatch();
+        }
+
+        // Ensure several tasks are shown.
+        let mut res = client.get(format!("/label/{}", inserted_label_id)).dispatch();
+        assert_eq!(res.status(), Status::Ok);
+
+        let body = res.body_string().unwrap();
+        assert!(body.contains(&task_names[0]));
+        assert!(body.contains(&task_names[1]));
+        assert!(!body.contains(&task_names[2]));
+    })
+}
+
+#[test]
 fn confirm_page() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
