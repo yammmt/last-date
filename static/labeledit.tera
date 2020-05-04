@@ -1,0 +1,50 @@
+{% extends "base" %}
+
+{% block title %}label edit | last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            {% if msg %}
+            <div class="notification is-{{ msg.0 }} is-light">
+                {{ msg.1 }}
+            </div>
+            {% endif %}
+
+            <form method="post" action="./">
+                <div class="field">
+                    <label class="label">Label name</label>
+                    <div class="control">
+                        <input class="input" name="name" type="text" value="{{ label.name }}">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Label color</label>
+                    <div class="control">
+                        <input class="input" name="color" type="text" value="{{ label.color_hex}}">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary is-light" type="submit">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <button class="button is-link is-light" onclick="location.href='../'">Back to label list page</button>
+            <button class="button is-link is-light" onclick="location.href='../../'">Back to index page</button>
+        </div>
+    </section>
+{% endblock content %}

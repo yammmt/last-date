@@ -36,6 +36,8 @@ struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, label
 struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
 struct TasksByLabelContext{ tasks: Vec<Task>, label: Label}
+#[derive(Debug, Serialize)]
+struct LabelEditContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, label: Label }
 
 impl<'a, 'b> Context<'a, 'b> {
     pub fn err(conn: &DbConn, msg: &'a str) -> Context<'static, 'a> {
@@ -57,6 +59,12 @@ impl<'a, 'b> SingleTaskContext<'a, 'b> {
 impl TasksByLabelContext {
     pub fn raw(label_id: i32, conn: &DbConn) -> TasksByLabelContext {
         TasksByLabelContext{tasks: Task::tasks_by_label(label_id, conn), label: Label::label_by_id(label_id, conn)}
+    }
+}
+
+impl<'a, 'b> LabelEditContext<'a, 'b> {
+    pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> LabelEditContext<'a, 'b> {
+        LabelEditContext{ msg, label: Label::label_by_id(id, conn) }
     }
 }
 
@@ -103,12 +111,36 @@ fn label_list(msg: Option<FlashMessage>, conn: DbConn) -> Template {
     })
 }
 
+#[post("/label/<id>", data="<label_form>")]
+fn label_update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
+    let label = label_form.into_inner();
+    let color_code_regex = Regex::new(r"#[[:xdigit:]]{6}$").unwrap();
+    let redirect_url = format!("/label/{}/edit", id);
+    if label.name.is_empty() {
+        Flash::warning(Redirect::to(redirect_url), "Please input label name.")
+    } else if label.color.is_empty() || !color_code_regex.is_match(&label.color) {
+        Flash::warning(Redirect::to(redirect_url), "Please input label color with hex format.")
+    } else if Label::update(id, label, &conn) {
+        Flash::success(Redirect::to(redirect_url), "Label is updated.")
+    } else {
+        Flash::warning(Redirect::to(redirect_url), "The server failed.")
+    }
+}
+
 #[get("/label/<id>", rank = 0)]
 fn tasks_by_label(id: i32, conn: DbConn) -> Template {
     Template::render("tasksbylabel", TasksByLabelContext::raw(id, &conn))
 }
 
-#[post("/<id>/date")]
+#[get("/label/<id>/edit", rank = 0)]
+fn label_edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
+    Template::render("labeledit", &match msg {
+        Some(ref msg) => LabelEditContext::raw(id, &conn, Some((msg.name(), msg.msg()))),
+        None => LabelEditContext::raw(id, &conn, None),
+    })
+}
+
+#[post("/<id>/date", rank = 1)]
 fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
     if Task::update_to_today(id, &conn) {
         Flash::success(Redirect::to("/"), "\"Last updated\" date is updated to today.")
@@ -177,7 +209,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, new_label, tasks_by_label])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, new_label, tasks_by_label, label_edit, label_update])
         .attach(Template::fairing())
 }
 

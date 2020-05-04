@@ -506,3 +506,32 @@ fn test_update_task() {
         assert_eq!(updated_task.label_id, None);
     })
 }
+
+#[test]
+fn test_update_label() {
+    run_test!(|client, conn| {
+        // Create a new label.
+        client.post("/label")
+            .header(ContentType::Form)
+            .body(format!("name=newlabel&color=#eeeeee"))
+            .dispatch();
+        let inserted_id = Label::all(&conn)[0].id.unwrap();
+
+        // Update above label.
+        let new_name = "newnewlabel".to_string();
+        let new_color = "#5566ff".to_string();
+        let form_data = format!("name={}&color={}", &new_name, &new_color);
+        let res = client.post(format!("/label/{}", inserted_id))
+            .header(ContentType::Form)
+            .body(form_data)
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("success")));
+
+        let updated_label = Label::label_by_id(inserted_id, &conn);
+        assert_eq!(updated_label.name, new_name);
+        assert_eq!(updated_label.color_hex, new_color);
+    })
+}

@@ -42,6 +42,14 @@ impl Label {
         diesel::insert_into(labels::table).values(&l).execute(conn).is_ok()
     }
 
+    pub fn update(id: i32, label: LabelForm, conn: &SqliteConnection) -> bool {
+        diesel::update(all_labels.find(id))
+            .set((
+                labels::name.eq(label.name),
+                labels::color_hex.eq(label.color)
+            )).execute(conn).is_ok()
+    }
+
     #[cfg(test)]
     pub fn delete_all(conn: &SqliteConnection) -> bool {
         diesel::delete(all_labels).execute(conn).is_ok()

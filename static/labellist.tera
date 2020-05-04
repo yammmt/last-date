@@ -29,6 +29,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Edit</th>
                     </tr>
                     <tbody>
                     {% for label in labels %}
@@ -36,6 +37,11 @@
                             <td>
                                 <button class="button is-outlined" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ label.id }}'">
                                     {{ label.name }}
+                                </button>
+                            </td>
+                            <td>
+                                <button class="button is-primary is-light" onclick="location.href='/label/{{ label.id }}/edit'">
+                                    Edit
                                 </button>
                             </td>
                         </tr>
