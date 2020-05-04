@@ -40,6 +40,7 @@ pub struct TaskUpdate {
     pub name: String,
     pub description: String,
     pub updated_at: String,
+    pub label_id: Option<i32>
 }
 
 impl Task {
@@ -82,7 +83,8 @@ impl Task {
         diesel::update(all_tasks.find(id))
             .set((
                 tasks::name.eq(task.name),
-                tasks::description.eq(task.description)
+                tasks::description.eq(task.description),
+                tasks::label_id.eq(task.label_id)
             )).execute(conn).is_ok()
     }
 

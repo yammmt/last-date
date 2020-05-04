@@ -21,18 +21,20 @@
                 <div class="field">
                     <label class="label">Label</label>
                     <div class="control">
-                        {% if task.label_id %}
-                        {% for label in labels %}
-                        {% if label.id == task.label_id %}
-                        {# TODO: remove readonly #}
-                        {# TODO: show color #}
-                        <input class="input" name="label_id" type="text" value="{{ label.name }}" readonly>
-                        {% break %}
-                        {% endif %}
-                        {% endfor %}
-                        {% else %}
-                        -
-                        {% endif %}
+                        <div class="select">
+                            <select name="label_id">
+                                <option value="">-</option>
+                                {% if labels %}
+                                {% for label in labels %}
+                                {% if label.id == task.label_id %}
+                                <option value="{{ label.id }}" selected>{{ label.name }}</option>
+                                {% else %}
+                                <option value="{{ label.id }}">{{ label.name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
                     </div>
                 </div>
 

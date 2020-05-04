@@ -418,11 +418,18 @@ fn test_update_task() {
         let t = Task::insert_with_old_date(&task_name, &conn);
         assert!(t);
 
+        // Create new label, too.
+        client.post("/label")
+            .header(ContentType::Form)
+            .body(format!("name=newlabel&color=#eeeeee"))
+            .dispatch();
+
         // Submit valid update form. Note that `updated_at` field isn't updated.
         let inserted_id = Task::all(&conn)[0].id.unwrap();
+        let inserted_label_id = Label::all(&conn)[0].id.unwrap();
         let task_description = "newdescription".to_string();
         let dt = Local::today().naive_local().to_string();
-        let form_data = format!("name={}&description={}&updated_at={}", task_name, task_description, dt);
+        let form_data = format!("name={}&description={}&updated_at={}&label_id={}", task_name, task_description, dt, inserted_label_id);
         let res = client.post(format!("/{}", inserted_id))
             .header(ContentType::Form)
             .body(form_data)
@@ -436,5 +443,20 @@ fn test_update_task() {
         assert_eq!(updated_task.name, task_name);
         assert_eq!(updated_task.description, task_description);
         assert_ne!(updated_task.updated_at, dt);
+        assert_eq!(updated_task.label_id, Some(inserted_label_id));
+
+        // Update label_id to NULL.
+        let form_data = format!("name={}&description={}&updated_at={}&label_id=", task_name, task_description, dt);
+        let res = client.post(format!("/{}", inserted_id))
+            .header(ContentType::Form)
+            .body(form_data)
+            .dispatch();
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("success")));
+
+        let updated_task = Task::task_by_id(inserted_id, &conn);
+        assert_eq!(updated_task.label_id, None);
     })
 }
