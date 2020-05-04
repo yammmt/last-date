@@ -50,6 +50,10 @@ impl Label {
             )).execute(conn).is_ok()
     }
 
+    pub fn delete_with_id(id: i32, conn: &SqliteConnection) -> bool {
+        diesel::delete(all_labels.find(id)).execute(conn).is_ok()
+    }
+
     #[cfg(test)]
     pub fn delete_all(conn: &SqliteConnection) -> bool {
         diesel::delete(all_labels).execute(conn).is_ok()

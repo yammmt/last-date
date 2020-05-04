@@ -41,7 +41,7 @@
                             </td>
                             <td>
                                 <button class="button is-primary is-light" onclick="location.href='/label/{{ label.id }}/edit'">
-                                    Edit
+                                    Edit/Delete
                                 </button>
                             </td>
                         </tr>

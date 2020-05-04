@@ -176,6 +176,32 @@ fn confirm_page() {
 }
 
 #[test]
+fn label_confirm_page() {
+    run_test!(|client, conn| {
+        // Create a new label.
+        client.post("/label")
+            .header(ContentType::Form)
+            .body("name=label+confirm+test&color=#ababab")
+            .dispatch();
+            let inserted_id = Label::all(&conn)[0].id.unwrap();
+
+        // Ensure we can access confirm page.
+        let mut res = client.get(format!("/label/{}/confirm", inserted_id)).dispatch();
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure confirm page shows buttons
+        let body = res.body_string().unwrap();
+        assert!(body.contains(
+            r#"<button class="button is-danger is-light" type="submit">Delete</button>"#
+        ));
+        assert!(body.contains("Back to label</button>"));
+        assert!(body.contains(
+            r#"<button class="button is-link is-light" onclick="location.href='/'">Back to index page</button>"#
+        ));
+    })
+}
+
+#[test]
 fn test_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the tasks before making changes.
@@ -211,7 +237,7 @@ fn test_insertion_deletion() {
 }
 
 #[test]
-fn test_label_insertion() {
+fn test_label_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the labels before making changes.
         let init_labels = Label::all(&conn);
@@ -229,6 +255,17 @@ fn test_label_insertion() {
         // Ensure the label is what we expect.
         assert_eq!(new_labels[0].name, "test label");
         assert_eq!(new_labels[0].color_hex, "#ababab");
+
+        // Delete a label.
+        let id = new_labels[0].id.unwrap();
+        client.delete(format!("/label/{}", id)).dispatch();
+
+        // Ensure label was deleted.
+        let final_labels = Label::all(&conn);
+        assert_eq!(final_labels.len(), init_labels.len());
+        if final_labels.len() > 0 {
+            assert_ne!(final_labels[0].name, "test label");
+        }
     })
 }
 

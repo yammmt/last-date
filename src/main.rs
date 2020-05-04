@@ -35,6 +35,8 @@ struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, label
 #[derive(Debug, Serialize)]
 struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
+struct SingleLabelContext{ label: Label }
+#[derive(Debug, Serialize)]
 struct TasksByLabelContext{ tasks: Vec<Task>, label: Label}
 #[derive(Debug, Serialize)]
 struct LabelEditContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, label: Label }
@@ -53,6 +55,12 @@ impl<'a, 'b> Context<'a, 'b> {
 impl<'a, 'b> SingleTaskContext<'a, 'b> {
     pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> SingleTaskContext<'a, 'b> {
         SingleTaskContext{ msg, task: Task::task_by_id(id, conn), labels: Label::all(conn) }
+    }
+}
+
+impl SingleLabelContext {
+    pub fn raw(id: i32, conn: &DbConn) -> SingleLabelContext {
+        SingleLabelContext{ label: Label::label_by_id(id, conn) }
     }
 }
 
@@ -140,6 +148,20 @@ fn label_edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
     })
 }
 
+#[get("/label/<id>/confirm")]
+fn label_confirm(id: i32, conn: DbConn) -> Template {
+    Template::render("labelconfirm", SingleLabelContext::raw(id, &conn))
+}
+
+#[delete("/label/<id>")]
+fn label_delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
+    if Label::delete_with_id(id, &conn) {
+        Ok(Flash::success(Redirect::to("/label"), "Your label was deleted."))
+    } else {
+        Err(Template::render("labeledit", &Context::err(&conn, "Couldn't delete label.")))
+    }
+}
+
 #[post("/<id>/date", rank = 1)]
 fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
     if Task::update_to_today(id, &conn) {
@@ -209,7 +231,7 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, new_label, tasks_by_label, label_edit, label_update])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, new_label, tasks_by_label, label_edit, label_update, label_confirm, label_delete])
         .attach(Template::fairing())
 }
 
