@@ -19,6 +19,26 @@
 
             <form method="post" action="{{ task.id }}">
                 <div class="field">
+                    <label class="label">Label</label>
+                    <div class="control">
+                        <div class="select">
+                            <select name="label_id">
+                                <option value="">-</option>
+                                {% if labels %}
+                                {% for label in labels %}
+                                {% if label.id == task.label_id %}
+                                <option value="{{ label.id }}" selected>{{ label.name }}</option>
+                                {% else %}
+                                <option value="{{ label.id }}">{{ label.name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
                     <label class="label">Task name</label>
                     <div class="control">
                         <input class="input" name="name" type="text" value="{{ task.name }}">

@@ -1,0 +1,60 @@
+{% extends "base" %}
+
+{% block title %}label | last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            {% if msg %}
+                <div class="notification is-{{ msg.0 }} is-light">
+                    {{ msg.1 }}
+                </div>
+            {% endif %}
+
+            <form class="inline" action="label/" method="post">
+                <input type="text" placeholder="new label name?"
+                    name="name" id="name" value="" autofocus>
+                <input type="text" placeholder="new label color?"
+                    name="color" id="color" value="#90ee90">
+                <button class="button is-small is-info is-light" type="submit">add</button>
+            </form>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Edit</th>
+                    </tr>
+                    <tbody>
+                    {% for label in labels %}
+                        <tr>
+                            <td>
+                                <button class="button is-outlined" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ label.id }}'">
+                                    {{ label.name }}
+                                </button>
+                            </td>
+                            <td>
+                                <button class="button is-primary is-light" onclick="location.href='/label/{{ label.id }}/edit'">
+                                    Edit/Delete
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </thead>
+            </table>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>
+        </div>
+    </section>
+{% endblock content %}

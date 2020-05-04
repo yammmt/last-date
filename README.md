@@ -2,31 +2,15 @@
 
 Simple ToDo list based on last date I did.
 
+![index page image](./img/index.jpg)
+
 ## Purpose
 
 This app's purpose is to remind **me** of forgotten daily tasks like cleaning in specific places (window, shoe case, bed cover, ...).
 
 ## Usage
 
-### Index (root) page
-
-If we access the root of this app, this page appears.  
-![index page image](./img/index.jpg)  
-Here,
-
-- All your tasks are shown in ascending order of the "Last updated"
-- You can add a new task with the form just above the task list
-- You can move to task detail page if you click task name
-- You can update "Last updated" if you click "update" button
-
-### Detail page
-
-You can update task name and its description here, but can't update "Last updated".  
-![detail page image](./img/detail.jpg)  
-:warning: You can't update "Last updated" here. Please use "update" button in index page instead.
-
-If you want to delete your task, click "Delete this task" button and click "Delete" button again in the next confirm page.  
-![confirm page image](img/confirm.jpg)
+See [usage.md](./usage.md) file.
 
 ## Run
 

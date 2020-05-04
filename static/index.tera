@@ -26,6 +26,7 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th><a href="/label">Label</a></th>
                         <th>Name</th>
                         <th>Last updated</th>
                         <th>Update to today</th>
@@ -33,6 +34,20 @@
                     <tbody>
                     {% for task in tasks %}
                         <tr>
+                            <td>
+                                {% if task.label_id %}
+                                {% for label in labels %}
+                                {% if label.id == task.label_id %}
+                                <button class="button is-outlined" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
+                                    {{ label.name }}
+                                </button>
+                                {% break %}
+                                {% endif %}
+                                {% endfor %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
                             <td><a href="{{ task.id }}">{{ task.name }}</a></td>
                             <td>{{ task.updated_at }}</td>
                             <td>

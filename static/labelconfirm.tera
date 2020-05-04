@@ -1,0 +1,33 @@
+{% extends "base" %}
+
+{% block title %}confirm | last-date{% endblock title %}
+{% block head %}
+    {{ super() }}
+{% endblock head %}
+
+{% block herotitle %}last-date{% endblock herotitle %}
+{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
+
+{% block content %}
+    <section class="section">
+        <div class="container">
+            <div class="a">
+                Your label <b>{{ label.name }}</b> is deleted. Are you sure?
+            </div>
+        </div>
+
+        <div class="container">
+            <form class="inline" action="/label/{{ label.id }}" method="post">
+                <input type="hidden" name="_method" value="delete" />
+                <button class="button is-danger is-light" type="submit">Delete</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <button class="button is-link is-light" onclick="location.href='./edit'">Back to label</button>
+            <button class="button is-link is-light" onclick="location.href='/'">Back to index page</button>
+        </div>
+    </section>
+{% endblock content %}
