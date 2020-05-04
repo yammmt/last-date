@@ -29,8 +29,7 @@ pub struct LabelForm {
 
 impl Label {
     pub fn all(conn: &SqliteConnection) -> Vec<Label> {
-        // TODO: order by name? id?
-        all_labels.order(labels::id).load::<Label>(conn).unwrap()
+        all_labels.order(labels::name).load::<Label>(conn).unwrap()
     }
 
     pub fn label_by_id(id: i32, conn: &SqliteConnection) -> Label {
