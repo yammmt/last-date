@@ -105,6 +105,6 @@ pub fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
     if Task::delete_with_id(id, &conn) {
         Ok(Flash::success(Redirect::to("/"), "Your task was deleted."))
     } else {
-        Err(Template::render("task/edit", &IndexContext::err(&conn, "Couldn't delete task.")))
+        Err(Template::render("task/index", &IndexContext::err(&conn, "Couldn't delete task.")))
     }
 }

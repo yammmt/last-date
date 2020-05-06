@@ -97,6 +97,6 @@ pub fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
     if Label::delete_with_id(id, &conn) {
         Ok(Flash::success(Redirect::to("/label"), "Your label was deleted."))
     } else {
-        Err(Template::render("label/edit", &IndexContext::err(&conn, "Couldn't delete label.")))
+        Err(Template::render("label/index", &IndexContext::err(&conn, "Couldn't delete label.")))
     }
 }
