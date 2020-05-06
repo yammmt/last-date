@@ -6,7 +6,7 @@ extern crate parking_lot;
 extern crate rand;
 
 use super::models::label::Label;
-use super::task::Task;
+use super::models::task::Task;
 use self::parking_lot::Mutex;
 use self::rand::{Rng, thread_rng, distributions::Alphanumeric};
 
