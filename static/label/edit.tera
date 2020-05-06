@@ -5,9 +5,6 @@
     {{ super() }}
 {% endblock head %}
 
-{% block herotitle %}last-date{% endblock herotitle %}
-{% block herosubtitle %}When did you do it last time?{% endblock herosubtitle %}
-
 {% block content %}
     <section class="section">
         <div class="container">

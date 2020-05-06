@@ -17,12 +17,8 @@
     <section class="hero is-primary is-bold is-small">
         <div class="hero-body">
             <div class="container">
-                <h1 class="title">
-                    {% block herotitle %}{% endblock herotitle %}
-                </h1>
-                <h2 class="subtitle is-6">
-                    {% block herosubtitle %}{% endblock herosubtitle %}
-                </h2>
+                <h1 class="title">last-date</h1>
+                <h2 class="subtitle is-6">When did you do it last time?</h2>
             </div>
         </div>
     </section>
