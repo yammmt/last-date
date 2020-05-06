@@ -11,32 +11,32 @@ use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 
 #[derive(Debug, Serialize)]
-struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, labels: Vec<Label> }
+struct IndexContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
-struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
+struct SingleContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
-struct TasksByLabelContext{ tasks: Vec<Task>, label: Label}
+struct ByLabelContext{ tasks: Vec<Task>, label: Label}
 
-impl<'a, 'b> Context<'a, 'b> {
-    pub fn err(conn: &DbConn, msg: &'a str) -> Context<'static, 'a> {
-        Context{ msg: Some(("warning", msg)), tasks: Task::all(conn), labels: Label::all(conn) }
+impl<'a, 'b> IndexContext<'a, 'b> {
+    pub fn err(conn: &DbConn, msg: &'a str) -> IndexContext<'static, 'a> {
+        IndexContext{ msg: Some(("warning", msg)), tasks: Task::all(conn), labels: Label::all(conn) }
     }
 
-    pub fn raw(conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> Context<'a, 'b> {
-        Context{ msg, tasks: Task::all(conn), labels: Label::all(conn) }
+    pub fn raw(conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> IndexContext<'a, 'b> {
+        IndexContext{ msg, tasks: Task::all(conn), labels: Label::all(conn) }
     }
 
 }
 
-impl<'a, 'b> SingleTaskContext<'a, 'b> {
-    pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> SingleTaskContext<'a, 'b> {
-        SingleTaskContext{ msg, task: Task::task_by_id(id, conn), labels: Label::all(conn) }
+impl<'a, 'b> SingleContext<'a, 'b> {
+    pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> SingleContext<'a, 'b> {
+        SingleContext{ msg, task: Task::task_by_id(id, conn), labels: Label::all(conn) }
     }
 }
 
-impl TasksByLabelContext {
-    pub fn raw(label_id: i32, conn: &DbConn) -> TasksByLabelContext {
-        TasksByLabelContext{tasks: Task::tasks_by_label(label_id, conn), label: Label::label_by_id(label_id, conn)}
+impl ByLabelContext {
+    pub fn raw(label_id: i32, conn: &DbConn) -> ByLabelContext {
+        ByLabelContext{tasks: Task::tasks_by_label(label_id, conn), label: Label::label_by_id(label_id, conn)}
     }
 }
 
@@ -55,14 +55,14 @@ pub fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
 #[get("/")]
 pub fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
     Template::render("index", &match msg {
-        Some(ref msg) => Context::raw(&conn, Some((msg.name(), msg.msg()))),
-        None => Context::raw(&conn, None),
+        Some(ref msg) => IndexContext::raw(&conn, Some((msg.name(), msg.msg()))),
+        None => IndexContext::raw(&conn, None),
     })
 }
 
 #[get("/label/<id>", rank = 0)]
-pub fn tasks_by_label(id: i32, conn: DbConn) -> Template {
-    Template::render("tasksbylabel", TasksByLabelContext::raw(id, &conn))
+pub fn by_label(id: i32, conn: DbConn) -> Template {
+    Template::render("tasksbylabel", ByLabelContext::raw(id, &conn))
 }
 
 #[post("/<id>/date", rank = 1)]
@@ -75,10 +75,10 @@ pub fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
 }
 
 #[get("/<id>")]
-pub fn task_detail(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("detail", &match msg {
-        Some(ref msg) => SingleTaskContext::raw(id, &conn, Some((msg.name(), msg.msg()))),
-        None => SingleTaskContext::raw(id, &conn, None),
+pub fn edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
+    Template::render("edit", &match msg {
+        Some(ref msg) => SingleContext::raw(id, &conn, Some((msg.name(), msg.msg()))),
+        None => SingleContext::raw(id, &conn, None),
     })
 }
 
@@ -97,7 +97,7 @@ pub fn update(id: i32, task_update_form: Form<TaskUpdate>, conn: DbConn) -> Flas
 
 #[get("/<id>/confirm", rank = 1)]
 pub fn confirm(id: i32, conn: DbConn) -> Template {
-    Template::render("confirm", SingleTaskContext::raw(id, &conn, None))
+    Template::render("confirm", SingleContext::raw(id, &conn, None))
 }
 
 #[delete("/<id>")]
@@ -105,6 +105,6 @@ pub fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
     if Task::delete_with_id(id, &conn) {
         Ok(Flash::success(Redirect::to("/"), "Your task was deleted."))
     } else {
-        Err(Template::render("detail", &Context::err(&conn, "Couldn't delete task.")))
+        Err(Template::render("edit", &IndexContext::err(&conn, "Couldn't delete task.")))
     }
 }

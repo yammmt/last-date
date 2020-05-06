@@ -52,16 +52,16 @@ fn rocket() -> Rocket {
             routes::task::new,
             routes::task::update_date,
             routes::task::update,
-            routes::task::task_detail,
+            routes::task::edit,
             routes::task::delete,
             routes::task::confirm,
-            routes::task::tasks_by_label,
-            routes::label::new_label,
-            routes::label::label_list,
-            routes::label::label_update,
-            routes::label::label_edit,
-            routes::label::label_confirm,
-            routes::label::label_delete
+            routes::task::by_label,
+            routes::label::index,
+            routes::label::new,
+            routes::label::update,
+            routes::label::edit,
+            routes::label::confirm,
+            routes::label::delete
         ])
         .attach(Template::fairing())
 }
