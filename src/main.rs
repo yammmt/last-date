@@ -7,13 +7,11 @@
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate rocket_contrib;
 
-extern crate regex;
-
-mod label;
 mod task;
+mod models;
+mod routes;
 #[cfg(test)] mod tests;
 
-use regex::Regex;
 use rocket::Rocket;
 use rocket::fairing::AdHoc;
 use rocket::request::{Form, FlashMessage};
@@ -22,7 +20,7 @@ use rocket_contrib::{templates::Template, serve::StaticFiles};
 use diesel::SqliteConnection;
 use diesel::Connection;
 
-use label::{Label, LabelForm};
+use models::label::Label;
 use task::{Task, TaskName, TaskUpdate};
 
 embed_migrations!();
@@ -35,11 +33,7 @@ struct Context<'a, 'b>{ msg: Option<(&'a str, &'b str)>, tasks: Vec<Task>, label
 #[derive(Debug, Serialize)]
 struct SingleTaskContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, task: Task, labels: Vec<Label> }
 #[derive(Debug, Serialize)]
-struct SingleLabelContext{ label: Label }
-#[derive(Debug, Serialize)]
 struct TasksByLabelContext{ tasks: Vec<Task>, label: Label}
-#[derive(Debug, Serialize)]
-struct LabelEditContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, label: Label }
 
 impl<'a, 'b> Context<'a, 'b> {
     pub fn err(conn: &DbConn, msg: &'a str) -> Context<'static, 'a> {
@@ -58,21 +52,9 @@ impl<'a, 'b> SingleTaskContext<'a, 'b> {
     }
 }
 
-impl SingleLabelContext {
-    pub fn raw(id: i32, conn: &DbConn) -> SingleLabelContext {
-        SingleLabelContext{ label: Label::label_by_id(id, conn) }
-    }
-}
-
 impl TasksByLabelContext {
     pub fn raw(label_id: i32, conn: &DbConn) -> TasksByLabelContext {
         TasksByLabelContext{tasks: Task::tasks_by_label(label_id, conn), label: Label::label_by_id(label_id, conn)}
-    }
-}
-
-impl<'a, 'b> LabelEditContext<'a, 'b> {
-    pub fn raw(id: i32, conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> LabelEditContext<'a, 'b> {
-        LabelEditContext{ msg, label: Label::label_by_id(id, conn) }
     }
 }
 
@@ -96,70 +78,9 @@ fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
     })
 }
 
-#[post("/label", data = "<label_form>")]
-fn new_label(label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
-    let label = label_form.into_inner();
-    let color_code_regex = Regex::new(r"#[[:xdigit:]]{6}$").unwrap();
-    if label.name.is_empty() {
-        Flash::warning(Redirect::to("/label"), "Please input label name.")
-    } else if label.color.is_empty() || !color_code_regex.is_match(&label.color) {
-        Flash::warning(Redirect::to("/label"), "Please input label color with hex format.")
-    } else if Label::insert(label, &conn) {
-        Flash::success(Redirect::to("/label"), "New label added.")
-    } else {
-        Flash::warning(Redirect::to("/label"), "The server failed.")
-    }
-}
-
-#[get("/label")]
-fn label_list(msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("labellist", &match msg {
-        Some(ref msg) => Context::raw(&conn, Some((msg.name(), msg.msg()))),
-        None => Context::raw(&conn, None),
-    })
-}
-
-#[post("/label/<id>", data="<label_form>")]
-fn label_update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
-    let label = label_form.into_inner();
-    let color_code_regex = Regex::new(r"#[[:xdigit:]]{6}$").unwrap();
-    let redirect_url = format!("/label/{}/edit", id);
-    if label.name.is_empty() {
-        Flash::warning(Redirect::to(redirect_url), "Please input label name.")
-    } else if label.color.is_empty() || !color_code_regex.is_match(&label.color) {
-        Flash::warning(Redirect::to(redirect_url), "Please input label color with hex format.")
-    } else if Label::update(id, label, &conn) {
-        Flash::success(Redirect::to(redirect_url), "Label is updated.")
-    } else {
-        Flash::warning(Redirect::to(redirect_url), "The server failed.")
-    }
-}
-
 #[get("/label/<id>", rank = 0)]
 fn tasks_by_label(id: i32, conn: DbConn) -> Template {
     Template::render("tasksbylabel", TasksByLabelContext::raw(id, &conn))
-}
-
-#[get("/label/<id>/edit", rank = 0)]
-fn label_edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("labeledit", &match msg {
-        Some(ref msg) => LabelEditContext::raw(id, &conn, Some((msg.name(), msg.msg()))),
-        None => LabelEditContext::raw(id, &conn, None),
-    })
-}
-
-#[get("/label/<id>/confirm")]
-fn label_confirm(id: i32, conn: DbConn) -> Template {
-    Template::render("labelconfirm", SingleLabelContext::raw(id, &conn))
-}
-
-#[delete("/label/<id>")]
-fn label_delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
-    if Label::delete_with_id(id, &conn) {
-        Ok(Flash::success(Redirect::to("/label"), "Your label was deleted."))
-    } else {
-        Err(Template::render("labeledit", &Context::err(&conn, "Couldn't delete label.")))
-    }
 }
 
 #[post("/<id>/date", rank = 1)]
@@ -231,7 +152,14 @@ fn rocket() -> Rocket {
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
-        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, label_list, new_label, tasks_by_label, label_edit, label_update, label_confirm, label_delete])
+        .mount("/", routes![index, new, update_date, update, task_detail, delete, confirm, tasks_by_label,
+            routes::label::new_label,
+            routes::label::label_list,
+            routes::label::label_update,
+            routes::label::label_edit,
+            routes::label::label_confirm,
+            routes::label::label_delete
+        ])
         .attach(Template::fairing())
 }
 

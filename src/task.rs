@@ -17,7 +17,7 @@ mod schema {
 use self::schema::tasks;
 use self::schema::tasks::dsl::tasks as all_tasks;
 
-use crate::label::Label;
+use crate::models::label::Label;
 
 #[table_name="tasks"]
 #[belongs_to(Label, foreign_key = "label_id")]
