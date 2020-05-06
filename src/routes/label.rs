@@ -57,7 +57,7 @@ pub fn new(label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
 
 #[get("/label")]
 pub fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("labellist", &match msg {
+    Template::render("label/index", &match msg {
         Some(ref msg) => IndexContext::raw(&conn, Some((msg.name(), msg.msg()))),
         None => IndexContext::raw(&conn, None),
     })
@@ -81,7 +81,7 @@ pub fn update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redir
 
 #[get("/label/<id>/edit", rank = 0)]
 pub fn edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("labeledit", &match msg {
+    Template::render("label/edit", &match msg {
         Some(ref msg) => UpdateContext::raw(id, &conn, Some((msg.name(), msg.msg()))),
         None => UpdateContext::raw(id, &conn, None),
     })
@@ -89,7 +89,7 @@ pub fn edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
 
 #[get("/label/<id>/confirm")]
 pub fn confirm(id: i32, conn: DbConn) -> Template {
-    Template::render("labelconfirm", SingleContext::raw(id, &conn))
+    Template::render("label/confirm", SingleContext::raw(id, &conn))
 }
 
 #[delete("/label/<id>")]
@@ -97,6 +97,6 @@ pub fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
     if Label::delete_with_id(id, &conn) {
         Ok(Flash::success(Redirect::to("/label"), "Your label was deleted."))
     } else {
-        Err(Template::render("labeledit", &IndexContext::err(&conn, "Couldn't delete label.")))
+        Err(Template::render("label/edit", &IndexContext::err(&conn, "Couldn't delete label.")))
     }
 }

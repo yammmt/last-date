@@ -54,7 +54,7 @@ pub fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
 
 #[get("/")]
 pub fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("index", &match msg {
+    Template::render("task/index", &match msg {
         Some(ref msg) => IndexContext::raw(&conn, Some((msg.name(), msg.msg()))),
         None => IndexContext::raw(&conn, None),
     })
@@ -62,7 +62,7 @@ pub fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
 
 #[get("/label/<id>", rank = 0)]
 pub fn by_label(id: i32, conn: DbConn) -> Template {
-    Template::render("tasksbylabel", ByLabelContext::raw(id, &conn))
+    Template::render("task/bylabel", ByLabelContext::raw(id, &conn))
 }
 
 #[post("/<id>/date", rank = 1)]
@@ -76,7 +76,7 @@ pub fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
 
 #[get("/<id>")]
 pub fn edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
-    Template::render("edit", &match msg {
+    Template::render("task/edit", &match msg {
         Some(ref msg) => SingleContext::raw(id, &conn, Some((msg.name(), msg.msg()))),
         None => SingleContext::raw(id, &conn, None),
     })
@@ -97,7 +97,7 @@ pub fn update(id: i32, task_update_form: Form<TaskUpdate>, conn: DbConn) -> Flas
 
 #[get("/<id>/confirm", rank = 1)]
 pub fn confirm(id: i32, conn: DbConn) -> Template {
-    Template::render("confirm", SingleContext::raw(id, &conn, None))
+    Template::render("task/confirm", SingleContext::raw(id, &conn, None))
 }
 
 #[delete("/<id>")]
@@ -105,6 +105,6 @@ pub fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
     if Task::delete_with_id(id, &conn) {
         Ok(Flash::success(Redirect::to("/"), "Your task was deleted."))
     } else {
-        Err(Template::render("edit", &IndexContext::err(&conn, "Couldn't delete task.")))
+        Err(Template::render("task/edit", &IndexContext::err(&conn, "Couldn't delete task.")))
     }
 }
