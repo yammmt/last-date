@@ -9,9 +9,9 @@
     <section class="section">
         <div class="container">
             {% if msg %}
-                <div class="notification is-{{ msg.0 }} is-light">
-                    {{ msg.1 }}
-                </div>
+            <div class="notification is-{{ msg.0 }} is-light">
+                {{ msg.1 }}
+            </div>
             {% endif %}
 
             <form class="inline" action="/" method="post">
@@ -29,7 +29,7 @@
                         <th>Update to today</th>
                     </tr>
                     <tbody>
-                    {% for task in tasks %}
+                        {% for task in tasks %}
                         <tr>
                             <td>
                                 {% if task.label_id %}
@@ -54,7 +54,7 @@
                                 </form>
                             </td>
                         </tr>
-                    {% endfor %}
+                        {% endfor %}
                     </tbody>
                 </thead>
             </table>

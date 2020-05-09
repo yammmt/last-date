@@ -9,9 +9,9 @@
     <section class="section">
         <div class="container">
             {% if msg %}
-                <div class="notification is-{{ msg.0 }} is-light">
-                    {{ msg.1 }}
-                </div>
+            <div class="notification is-{{ msg.0 }} is-light">
+                {{ msg.1 }}
+            </div>
             {% endif %}
 
             <form class="inline" action="label/" method="post">
@@ -29,7 +29,7 @@
                         <th>Edit</th>
                     </tr>
                     <tbody>
-                    {% for label in labels %}
+                        {% for label in labels %}
                         <tr>
                             <td>
                                 <button class="button is-outlined" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ label.id }}'">
@@ -42,7 +42,7 @@
                                 </button>
                             </td>
                         </tr>
-                    {% endfor %}
+                        {% endfor %}
                     </tbody>
                 </thead>
             </table>

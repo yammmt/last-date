@@ -9,9 +9,9 @@
     <section class="section">
         <div class="container">
             {% if msg %}
-                <div class="notification is-{{ msg.0 }} is-light">
-                    {{ msg.1 }}
-                </div>
+            <div class="notification is-{{ msg.0 }} is-light">
+                {{ msg.1 }}
+            </div>
             {% endif %}
 
             <form method="post" action="{{ task.id }}">
