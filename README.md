@@ -33,7 +33,6 @@ If you want to run this in production environment, for example, run following co
 
 ```bash
 export ROCKET_SECRET_KEY=<your secret key>
-export ROCKET_ENV=production
 cargo run --release
 ```
 
