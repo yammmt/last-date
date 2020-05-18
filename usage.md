@@ -34,7 +34,7 @@ There are **two** task update paths: for date and for the others.
 
 #### Update "Last updated" date
 
-Click "update" button in index page.
+Click green button in index page.
 
 #### Update the other fields
 
