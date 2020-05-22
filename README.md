@@ -1,5 +1,7 @@
 # last-date
 
+![Rust](https://github.com/yammmt/last-date/workflows/Rust/badge.svg)
+
 Simple ToDo list based on last date I did.
 
 ![index page image](./img/index.jpg)
