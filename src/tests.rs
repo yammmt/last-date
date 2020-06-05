@@ -51,7 +51,7 @@ fn index_page() {
 fn label_list_page() {
     run_test!(|client, conn| {
         // TODO: use rand for hex color code, too
-        let mut rng = thread_rng();
+        let rng = thread_rng();
         let name: String = rng.sample_iter(&Alphanumeric).take(6).collect();
 
         // Ensure we can access label list page
@@ -103,7 +103,7 @@ fn detail_page() {
 
 #[test]
 fn tasks_by_label_page() {
-    let mut rng = thread_rng();
+    let rng = thread_rng();
     run_test!(|client, conn| {
         // Create new tasks
         let mut task_names: Vec<String> = Vec::with_capacity(3);
@@ -273,7 +273,7 @@ fn test_label_insertion_deletion() {
 fn test_many_insertions() {
     const ITER: usize = 100;
 
-    let mut rng = thread_rng();
+    let rng = thread_rng();
     run_test!(|client, conn| {
         let init_num = Task::all(&conn).len();
         let mut descs = Vec::new();
@@ -472,7 +472,7 @@ fn test_bad_update_form_submissions() {
 fn test_update_date() {
     run_test!(|client, conn| {
         // Create new task with old `updated_at`.
-        let mut rng = thread_rng();
+        let rng = thread_rng();
         let rng_name: String = rng.sample_iter(&Alphanumeric).take(7).collect();
         let t = Task::insert_with_old_date(&rng_name, &conn);
         assert!(t);
