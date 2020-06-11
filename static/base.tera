@@ -6,11 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock title %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
-    <style type="text/css">
-        .section { padding: 1rem 1.5rem; }
-        .table tbody tr td { vertical-align: middle; }
-    </style>
+    <link rel="stylesheet" href="/css/mystyles.css">
     {% endblock head %}
 </head>
 
