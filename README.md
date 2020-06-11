@@ -43,6 +43,8 @@ Note that you can generate secret key with `openssl rand -base64 32`.
 
 ### For developer
 
+#### Database
+
 To use [Diesel](https://github.com/diesel-rs/diesel) from command line, diesel-cli is needed.
 
 ```bash
@@ -56,6 +58,18 @@ To use database file different from one defined in `Rocket.toml`, set environmen
 export ROCKET_DATABASES='{sqlite_database={url="db/mydb.sqlite"}}'
 ```
 Note that this setting is common between `cargo run` and `cargo test`.
+
+#### CSS
+
+This repository uses the CSS framework [Bulma](https://bulma.io/) and Sass.
+The procedure to generate css files is the following:
+
+1. Clone submodule repository by `git submodule update --init --recursive`.
+1. Move to `static` directory.
+1. Update `static/mystyles.scss` file.
+1. Generate `static/css/mystyles.css` file by `sass --sourcemap=none mystyles.scss:css/mystyles.css --style compressed`.
+
+#### Formatter
 
 Use clippy for code lint.
 
