@@ -14,7 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install SQLite
-      run: sudo apt-get install libsqlite3-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libsqlite3-dev
     - name: Use nightly
       run: rustup default nightly
     - name: Build
@@ -29,7 +31,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install SQLite
-      run: sudo apt-get install libsqlite3-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install libsqlite3-dev
     - uses: actions-rs/toolchain@v1
       with:
           toolchain: nightly
