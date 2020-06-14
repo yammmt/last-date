@@ -12,11 +12,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install SQLite
+    - name: Install SQLite (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get install libsqlite3-dev
+    - name: Install SQLite (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install sqlite
     - name: Use nightly
       run: rustup default nightly
     - name: Build
