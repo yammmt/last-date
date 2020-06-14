@@ -19,6 +19,7 @@ jobs:
         sudo apt-get install libsqlite3-dev
     - name: Install SQLite (Windows)
       if: matrix.os == 'windows-latest'
+      shell: cmd
       run: |
         choco install sqlite
         cd /D C:\ProgramData\chocolatey\lib\SQLite\tools
