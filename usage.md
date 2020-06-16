@@ -30,7 +30,7 @@ You can add tasks by submitting the form in the top of index page.
 
 ### Update tasks
 
-There are **two** task update paths: for date and for the others.
+There are **two** task update paths: for only date and for all fields.
 
 #### Update "Last updated" date
 
@@ -38,7 +38,7 @@ Click green button in index page.
 
 #### Update the other fields
 
-You can update your task name and its description in task detail page, but can't update "Last updated".  
+You can update any fields of your task in task detail page.  
 ![task detail page image](./img/task_detail.jpg)
 
 To access task detail page, click your task name in index page.

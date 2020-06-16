@@ -77,13 +77,12 @@ impl Task {
         diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
     }
 
-    // Via this function, `updated_at` isn't updated because both task name and
-    // description don't change the date its task was done.
     pub fn update(id: i32, task: TaskUpdate, conn: &SqliteConnection) -> bool {
         diesel::update(all_tasks.find(id))
             .set((
                 tasks::name.eq(task.name),
                 tasks::description.eq(task.description),
+                tasks::updated_at.eq(task.updated_at),
                 tasks::label_id.eq(task.label_id)
             )).execute(conn).is_ok()
     }

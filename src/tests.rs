@@ -507,7 +507,7 @@ fn test_update_task() {
             .body(format!("name=newlabel&color=#eeeeee"))
             .dispatch();
 
-        // Submit valid update form. Note that `updated_at` field isn't updated.
+        // Submit valid update form.
         let inserted_id = Task::all(&conn)[0].id.unwrap();
         let inserted_label_id = Label::all(&conn)[0].id.unwrap();
         let task_description = "newdescription".to_string();
@@ -525,7 +525,7 @@ fn test_update_task() {
         let updated_task = Task::task_by_id(inserted_id, &conn);
         assert_eq!(updated_task.name, task_name);
         assert_eq!(updated_task.description, task_description);
-        assert_ne!(updated_task.updated_at, dt);
+        assert_eq!(updated_task.updated_at, dt);
         assert_eq!(updated_task.label_id, Some(inserted_label_id));
 
         // Update label_id to NULL.

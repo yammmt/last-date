@@ -50,7 +50,7 @@
                 <div class="field">
                     <label class="label">Last updated</label>
                     <div class="control">
-                        <input class="input" name="updated_at" type="text" value="{{ task.updated_at }}" readonly>
+                        <input class="input" name="updated_at" type="date" value="{{ task.updated_at }}">
                     </div>
                 </div>
 
