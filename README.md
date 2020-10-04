@@ -23,7 +23,6 @@ We have to use **nightly** Rust because Web framework [Rocket](https://rocket.rs
 ```bash
 git clone https://github.com/yammmt/last-date.git
 cd last-date
-rustup override set nightly
 cargo run
 ```
 
