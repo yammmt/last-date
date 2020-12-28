@@ -51,8 +51,12 @@ fn index_page() {
 fn label_list_page() {
     run_test!(|client, conn| {
         // TODO: use rand for hex color code, too
-        let rng = thread_rng();
-        let name: String = rng.sample_iter(&Alphanumeric).take(6).collect();
+        let mut rng = thread_rng();
+        let name: String = (&mut rng)
+            .sample_iter(&Alphanumeric)
+            .map(char::from)
+            .take(6)
+            .collect();
 
         // Ensure we can access label list page
         let mut res = client.get("/label").dispatch();
@@ -103,13 +107,17 @@ fn detail_page() {
 
 #[test]
 fn tasks_by_label_page() {
-    let rng = thread_rng();
+    let mut rng = thread_rng();
     run_test!(|client, conn| {
         // Create new tasks
         let mut task_names: Vec<String> = Vec::with_capacity(3);
         let mut task_ids: [i32; 3] = [0, 0, 0];
         for i in 0..3 {
-            let rng_name: String = rng.sample_iter(&Alphanumeric).take(7).collect();
+            let rng_name: String = (&mut rng)
+                .sample_iter(&Alphanumeric)
+                .map(char::from)
+                .take(7)
+                .collect();
             client.post("/")
                 .header(ContentType::Form)
                 .body(format!("name={}", rng_name))
@@ -273,14 +281,19 @@ fn test_label_insertion_deletion() {
 fn test_many_insertions() {
     const ITER: usize = 100;
 
-    let rng = thread_rng();
+    let mut rng = thread_rng();
     run_test!(|client, conn| {
         let init_num = Task::all(&conn).len();
         let mut descs = Vec::new();
 
         for i in 0..ITER {
             // Insert new task with random name.
-            let desc: String = rng.sample_iter(&Alphanumeric).take(6).collect();
+            let desc: String = (&mut rng)
+                .sample_iter(&Alphanumeric)
+                .map(char::from)
+                .take(6)
+                .collect();
+
             client.post("/")
                 .header(ContentType::Form)
                 .body(format!("name={}", desc))
@@ -472,8 +485,13 @@ fn test_bad_update_form_submissions() {
 fn test_update_date() {
     run_test!(|client, conn| {
         // Create new task with old `updated_at`.
-        let rng = thread_rng();
-        let rng_name: String = rng.sample_iter(&Alphanumeric).take(7).collect();
+        let mut rng = thread_rng();
+        let rng_name: String = (&mut rng)
+            .sample_iter(&Alphanumeric)
+            .map(char::from)
+            .take(7)
+            .collect();
+
         let t = Task::insert_with_old_date(&rng_name, &conn);
         assert!(t);
 
