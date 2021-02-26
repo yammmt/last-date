@@ -13,8 +13,8 @@ mod schema {
 use self::schema::labels;
 use self::schema::labels::dsl::labels as all_labels;
 
-#[table_name="labels"]
 #[derive(Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
+#[table_name="labels"]
 pub struct Label {
     pub id: Option<i32>,
     pub name: String,

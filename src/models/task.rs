@@ -19,9 +19,9 @@ use self::schema::tasks::dsl::tasks as all_tasks;
 
 use crate::models::label::Label;
 
+#[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
 #[table_name="tasks"]
 #[belongs_to(Label, foreign_key = "label_id")]
-#[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
 pub struct Task {
     pub id: Option<i32>,
     pub name: String,
