@@ -130,7 +130,7 @@ fn tasks_by_label_page() {
         // Create a new label, too.
         client.post("/label")
             .header(ContentType::Form)
-            .body(format!("name=newlabel&color=#eeeeee"))
+            .body("name=newlabel&color=#eeeeee".to_string())
             .dispatch();
         let inserted_label_id = Label::all(&conn)[0].id.unwrap();
 
@@ -522,7 +522,7 @@ fn test_update_task() {
         // Create new label, too.
         client.post("/label")
             .header(ContentType::Form)
-            .body(format!("name=newlabel&color=#eeeeee"))
+            .body("name=newlabel&color=#eeeeee".to_string())
             .dispatch();
 
         // Submit valid update form.
@@ -568,7 +568,7 @@ fn test_update_label() {
         // Create a new label.
         client.post("/label")
             .header(ContentType::Form)
-            .body(format!("name=newlabel&color=#eeeeee"))
+            .body("name=newlabel&color=#eeeeee".to_string())
             .dispatch();
         let inserted_id = Label::all(&conn)[0].id.unwrap();
 
