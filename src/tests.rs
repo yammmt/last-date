@@ -238,7 +238,7 @@ fn test_insertion_deletion() {
         // Ensure task was deleted.
         let final_tasks = Task::all(&conn);
         assert_eq!(final_tasks.len(), init_tasks.len());
-        if final_tasks.len() > 0 {
+        if !final_tasks.is_empty() {
             assert_ne!(final_tasks[0].name, "test task");
         }
     })
@@ -271,7 +271,7 @@ fn test_label_insertion_deletion() {
         // Ensure label was deleted.
         let final_labels = Label::all(&conn);
         assert_eq!(final_labels.len(), init_labels.len());
-        if final_labels.len() > 0 {
+        if !final_labels.is_empty() {
             assert_ne!(final_labels[0].name, "test label");
         }
     })
