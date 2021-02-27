@@ -111,8 +111,8 @@ fn tasks_by_label_page() {
     run_test!(|client, conn| {
         // Create new tasks
         let mut task_names: Vec<String> = Vec::with_capacity(3);
-        let mut task_ids: [i32; 3] = [0, 0, 0];
-        for i in 0..3 {
+        let mut task_ids: Vec<i32> = Vec::with_capacity(3);
+        for _ in 0..3 {
             let rng_name: String = (&mut rng)
                 .sample_iter(&Alphanumeric)
                 .map(char::from)
@@ -122,9 +122,9 @@ fn tasks_by_label_page() {
                 .header(ContentType::Form)
                 .body(format!("name={}", rng_name))
                 .dispatch();
-            let inserted_id = Task::all(&conn)[i].id.unwrap();
+            let inserted_id = Task::all(&conn).last().unwrap().id.unwrap();
             task_names.push(rng_name);
-            task_ids[i] = inserted_id;
+            task_ids.push(inserted_id);
         }
 
         // Create a new label, too.
