@@ -10,10 +10,6 @@ Simple ToDo list based on last date I did.
 
 This app's purpose is to remind **me** of forgotten daily tasks like cleaning in specific places (window, shoe case, bed cover, ...).
 
-## Usage
-
-See [usage.md](./usage.md) file.
-
 ## Run
 
 First, we have to install `sqlite3`.
