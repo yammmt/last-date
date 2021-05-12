@@ -54,7 +54,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libsqlite3-dev
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1.0.7
       with:
           toolchain: nightly
           components: clippy
