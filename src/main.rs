@@ -10,6 +10,7 @@ mod models;
 mod routes;
 #[cfg(test)] mod tests;
 
+use diesel::Connection;
 use rocket::{Build, Rocket};
 use rocket::fairing::AdHoc;
 use rocket_contrib::{templates::Template, serve::StaticFiles};
@@ -20,17 +21,15 @@ embed_migrations!();
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
 
-fn run_db_migrations(rocket: Rocket<Build>)  -> Result<Rocket<Build>, Rocket<Build>> {
-    let conn = DbConn::get_one(&rocket).expect("database connection");
+async fn run_db_migrations(rocket: Rocket<Build>) -> Result<Rocket<Build>, Rocket<Build>> {
+    let conn = DbConn::get_one(&rocket).await.expect("database connection");
     // TODO: Do foreign keys work?
-    match embedded_migrations::run(&*conn) {
-        Ok(()) =>  {
-            match conn.execute("PRAGMA foreign_keys = ON") {
-                Ok(_) => Ok(rocket),
-                Err(e) => {
-                    error!("Failed to enable foreign keys: {:?}", e);
-                    Err(rocket)
-                }
+    match conn.run(|c| embedded_migrations::run(c)).await {
+        Ok(()) => match conn.run(|c| c.execute("PRAGMA foreign_keys = ON")).await {
+            Ok(_) => Ok(rocket),
+            Err(e) => {
+                error!("Failed to enable foreign keys: {:?}", e);
+                Err(rocket)
             }
         },
         Err(e) => {
