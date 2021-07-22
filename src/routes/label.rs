@@ -7,7 +7,8 @@ use crate::DbConn;
 use crate::models::label::{Label, LabelForm};
 
 use regex::Regex;
-use rocket::request::{Form, FlashMessage};
+use rocket::form::Form;
+use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 

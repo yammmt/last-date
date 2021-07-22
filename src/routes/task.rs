@@ -6,7 +6,8 @@ use crate::DbConn;
 use crate::models::label::Label;
 use crate::models::task::{Task, TaskName, TaskUpdate};
 
-use rocket::request::{Form, FlashMessage};
+use rocket::form::Form;
+use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::Template;
 
