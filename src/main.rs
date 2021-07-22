@@ -10,7 +10,7 @@ mod models;
 mod routes;
 #[cfg(test)] mod tests;
 
-use rocket::Rocket;
+use rocket::{Build, Rocket};
 use rocket::fairing::AdHoc;
 use rocket_contrib::{templates::Template, serve::StaticFiles};
 use rocket_sync_db_pools::database;
@@ -20,7 +20,7 @@ embed_migrations!();
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
 
-fn run_db_migrations(rocket: Rocket)  -> Result<Rocket, Rocket> {
+fn run_db_migrations(rocket: Rocket<Build>)  -> Result<Rocket<Build>, Rocket<Build>> {
     let conn = DbConn::get_one(&rocket).expect("database connection");
     // TODO: Do foreign keys work?
     match embedded_migrations::run(&*conn) {
@@ -40,8 +40,8 @@ fn run_db_migrations(rocket: Rocket)  -> Result<Rocket, Rocket> {
     }
 }
 
-fn rocket() -> Rocket {
-    rocket::ignite()
+fn rocket() -> Rocket<Build> {
+    rocket::build()
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
         .mount("/", StaticFiles::from("static/"))
