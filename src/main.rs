@@ -5,7 +5,6 @@
 #[macro_use] extern crate diesel_migrations;
 #[macro_use] extern crate log;
 #[macro_use] extern crate serde_derive;
-#[macro_use] extern crate rocket_contrib;
 
 mod models;
 mod routes;
@@ -14,13 +13,12 @@ mod routes;
 use rocket::Rocket;
 use rocket::fairing::AdHoc;
 use rocket_contrib::{templates::Template, serve::StaticFiles};
-use diesel::SqliteConnection;
-use diesel::Connection;
+use rocket_sync_db_pools::database;
 
 embed_migrations!();
 
 #[database("sqlite_database")]
-pub struct DbConn(SqliteConnection);
+pub struct DbConn(diesel::SqliteConnection);
 
 fn run_db_migrations(rocket: Rocket)  -> Result<Rocket, Rocket> {
     let conn = DbConn::get_one(&rocket).expect("database connection");
