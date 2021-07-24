@@ -22,28 +22,27 @@ embed_migrations!();
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
 
-async fn run_db_migrations(rocket: Rocket<Build>) -> Result<Rocket<Build>, Rocket<Build>> {
+async fn run_db_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
     let conn = DbConn::get_one(&rocket).await.expect("database connection");
     // TODO: Do foreign keys work?
     match conn.run(|c| embedded_migrations::run(c)).await {
         Ok(()) => match conn.run(|c| c.execute("PRAGMA foreign_keys = ON")).await {
-            Ok(_) => Ok(rocket),
+            Ok(_) => {}
             Err(e) => {
                 error!("Failed to enable foreign keys: {:?}", e);
-                Err(rocket)
             }
         },
         Err(e) => {
             error!("Failed to run database migrations: {:?}", e);
-            Err(rocket)
         }
     }
+    rocket
 }
 
 fn rocket() -> Rocket<Build> {
     rocket::build()
         .attach(DbConn::fairing())
-        .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
+        .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
         .mount("/", FileServer::from(relative!("static")))
         .mount("/", routes![
             routes::task::index,
