@@ -13,7 +13,8 @@ mod routes;
 use diesel::Connection;
 use rocket::{Build, Rocket};
 use rocket::fairing::AdHoc;
-use rocket_contrib::{templates::Template, serve::StaticFiles};
+use rocket::fs::{FileServer, relative};
+use rocket_contrib::templates::Template;
 use rocket_sync_db_pools::database;
 
 embed_migrations!();
@@ -43,7 +44,7 @@ fn rocket() -> Rocket<Build> {
     rocket::build()
         .attach(DbConn::fairing())
         .attach(AdHoc::on_attach("Database Migrations", run_db_migrations))
-        .mount("/", StaticFiles::from("static/"))
+        .mount("/", FileServer::from(relative!("static")))
         .mount("/", routes![
             routes::task::index,
             routes::task::new,
