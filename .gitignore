@@ -12,6 +12,4 @@
 static/.sass-cache
 
 # Original files
-db/dev.sqlite
-db/staging.sqlite
-db/prod.sqlite
+db/*.sqlite*
