@@ -10,7 +10,7 @@ use super::models::task::Task;
 use self::parking_lot::Mutex;
 use self::rand::{Rng, thread_rng, distributions::Alphanumeric};
 
-use rocket::local::Client;
+use rocket::local::asynchronous::Client;
 use rocket::http::{Status, ContentType};
 use chrono::Local;
 
@@ -19,14 +19,16 @@ static DB_LOCK: Mutex<()> = Mutex::new(());
 macro_rules! run_test {
     (|$client:ident, $conn:ident| $block:expr) => ({
         let _lock = DB_LOCK.lock();
-        let rocket = super::rocket();
-        let db = super::DbConn::get_one(&rocket);
-        let $client = Client::new(rocket).expect("Rocket client");
-        let $conn = db.expect("failed to get database connection for testing");
-        assert!(Task::delete_all(&$conn), "failed to delete all tasks for testing");
-        assert!(Label::delete_all(&$conn), "failed to delete all labels for testing");
 
-        $block
+        rocket::async_test(async move {
+            let $client = Client::tracked(super::rocket()).await.expect("Rocket client");
+            let db = super::DbConn::get_one(&$client.rocket()).await;
+            let $conn = db.expect("failed to get database connection for testing");
+            assert!(Task::delete_all(&$conn).await, "failed to delete all tasks for testing");
+            assert!(Label::delete_all(&$conn).await, "failed to delete all labels for testing");
+
+            $block
+        })
     })
 }
 
@@ -34,11 +36,11 @@ macro_rules! run_test {
 fn index_page() {
     run_test!(|client, _conn| {
         // Ensure we can access index page
-        let mut res = client.get("/").dispatch();
+        let res = client.get("/").dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
         // Ensure index shows correct task table.
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(body.contains("Label"));
         assert!(body.contains("name"));
         assert!(body.contains("Last updated"));
@@ -59,20 +61,21 @@ fn label_list_page() {
             .collect();
 
         // Ensure we can access label list page
-        let mut res = client.get("/label").dispatch();
+        let res = client.get("/label").dispatch().await;
         assert_eq!(res.status(), Status::Ok);
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(!body.contains(&name));
 
         // Ensure created label is shown in label list page
         client.post("/label")
             .header(ContentType::Form)
             .body(format!("name={}&color=#ababab", name))
-            .dispatch();
+            .dispatch()
+            .await;
 
-        let mut res = client.get("/label").dispatch();
+        let res = client.get("/label").dispatch().await;
         assert_eq!(res.status(), Status::Ok);
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(body.contains(&name));
     })
 }
@@ -85,15 +88,16 @@ fn detail_page() {
         client.post("/")
             .header(ContentType::Form)
             .body(format!("name={}", task_name))
-            .dispatch();
-        let inserted_id = Task::all(&conn)[0].id.unwrap();
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
-        let mut res = client.get(format!("/{}", inserted_id)).dispatch();
+        let res = client.get(format!("/{}", inserted_id)).dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
         // Ensure detail page shows required fields.
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(body.contains("Label"));
         assert!(body.contains("Task name"));
         assert!(body.contains("Description"));
@@ -121,8 +125,9 @@ fn tasks_by_label_page() {
             client.post("/")
                 .header(ContentType::Form)
                 .body(format!("name={}", rng_name))
-                .dispatch();
-            let inserted_id = Task::all(&conn).last().unwrap().id.unwrap();
+                .dispatch()
+                .await;
+            let inserted_id = Task::all(&conn).await.last().unwrap().id.unwrap();
             task_names.push(rng_name);
             task_ids.push(inserted_id);
         }
@@ -131,8 +136,9 @@ fn tasks_by_label_page() {
         client.post("/label")
             .header(ContentType::Form)
             .body("name=newlabel&color=#eeeeee".to_string())
-            .dispatch();
-        let inserted_label_id = Label::all(&conn)[0].id.unwrap();
+            .dispatch()
+            .await;
+        let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
 
         // Attach label to several tasks.
         let dt = Local::today().naive_local().to_string();
@@ -141,14 +147,15 @@ fn tasks_by_label_page() {
             client.post(format!("/{}", task_ids[i]))
                 .header(ContentType::Form)
                 .body(form_data)
-                .dispatch();
+                .dispatch()
+                .await;
         }
 
         // Ensure several tasks are shown.
-        let mut res = client.get(format!("/label/{}", inserted_label_id)).dispatch();
+        let res = client.get(format!("/label/{}", inserted_label_id)).dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(body.contains(&task_names[0]));
         assert!(body.contains(&task_names[1]));
         assert!(!body.contains(&task_names[2]));
@@ -163,15 +170,16 @@ fn confirm_page() {
         client.post("/")
             .header(ContentType::Form)
             .body(format!("name={}", task_name))
-            .dispatch();
-        let inserted_id = Task::all(&conn)[0].id.unwrap();
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
-        let mut res = client.get(format!("/{}/confirm", inserted_id)).dispatch();
+        let res = client.get(format!("/{}/confirm", inserted_id)).dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
         // Ensure confirm page shows buttons
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(body.contains(
             r#"<button class="button is-danger is-light" type="submit">Delete</button>"#
         ));
@@ -190,15 +198,16 @@ fn label_confirm_page() {
         client.post("/label")
             .header(ContentType::Form)
             .body("name=label+confirm+test&color=#ababab")
-            .dispatch();
-            let inserted_id = Label::all(&conn)[0].id.unwrap();
+            .dispatch()
+            .await;
+            let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
-        let mut res = client.get(format!("/label/{}/confirm", inserted_id)).dispatch();
+        let res = client.get(format!("/label/{}/confirm", inserted_id)).dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
         // Ensure confirm page shows buttons
-        let body = res.body_string().unwrap();
+        let body = res.into_string().await.unwrap();
         assert!(body.contains(
             r#"<button class="button is-danger is-light" type="submit">Delete</button>"#
         ));
@@ -213,16 +222,17 @@ fn label_confirm_page() {
 fn test_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the tasks before making changes.
-        let init_tasks = Task::all(&conn);
+        let init_tasks = Task::all(&conn).await;
 
         // insert new task
         client.post("/")
             .header(ContentType::Form)
             .body("name=test+task")
-            .dispatch();
+            .dispatch()
+            .await;
 
         // Ensure we have one more task in the DB.
-        let new_tasks = Task::all(&conn);
+        let new_tasks = Task::all(&conn).await;
         assert_eq!(new_tasks.len(), init_tasks.len() + 1);
 
         // Ensure the task is what we expect.
@@ -233,10 +243,10 @@ fn test_insertion_deletion() {
 
         // Delete task.
         let id = new_tasks[0].id.unwrap();
-        client.delete(format!("/{}", id)).dispatch();
+        client.delete(format!("/{}", id)).dispatch().await;
 
         // Ensure task was deleted.
-        let final_tasks = Task::all(&conn);
+        let final_tasks = Task::all(&conn).await;
         assert_eq!(final_tasks.len(), init_tasks.len());
         if !final_tasks.is_empty() {
             assert_ne!(final_tasks[0].name, "test task");
@@ -248,16 +258,17 @@ fn test_insertion_deletion() {
 fn test_label_insertion_deletion() {
     run_test!(|client, conn| {
         // Get the labels before making changes.
-        let init_labels = Label::all(&conn);
+        let init_labels = Label::all(&conn).await;
 
         // Insert new label.
         client.post("/label")
             .header(ContentType::Form)
             .body("name=test+label&color=#ababab")
-            .dispatch();
+            .dispatch()
+            .await;
 
         // Ensure we have one more label in the DB.
-        let new_labels = Label::all(&conn);
+        let new_labels = Label::all(&conn).await;
         assert_eq!(new_labels.len(), init_labels.len() + 1);
 
         // Ensure the label is what we expect.
@@ -266,10 +277,10 @@ fn test_label_insertion_deletion() {
 
         // Delete a label.
         let id = new_labels[0].id.unwrap();
-        client.delete(format!("/label/{}", id)).dispatch();
+        client.delete(format!("/label/{}", id)).dispatch().await;
 
         // Ensure label was deleted.
-        let final_labels = Label::all(&conn);
+        let final_labels = Label::all(&conn).await;
         assert_eq!(final_labels.len(), init_labels.len());
         if !final_labels.is_empty() {
             assert_ne!(final_labels[0].name, "test label");
@@ -283,7 +294,7 @@ fn test_many_insertions() {
 
     let mut rng = thread_rng();
     run_test!(|client, conn| {
-        let init_num = Task::all(&conn).len();
+        let init_num = Task::all(&conn).await.len();
         let mut descs = Vec::new();
 
         for i in 0..ITER {
@@ -297,13 +308,14 @@ fn test_many_insertions() {
             client.post("/")
                 .header(ContentType::Form)
                 .body(format!("name={}", desc))
-                .dispatch();
+                .dispatch()
+                .await;
 
             // Record the name we choose for this iteration.
             descs.insert(0, desc);
 
             // Ensure the task was inserted properly and all other tasks remain.
-            let tasks = Task::all_by_id(&conn);
+            let tasks = Task::all_by_id(&conn).await;
             assert_eq!(tasks.len(), init_num + i + 1);
 
             for j in 0..i {
@@ -320,7 +332,8 @@ fn test_bad_new_task_form_submissions() {
         // because task form in index page has `name` field.
         let res = client.post("/")
             .header(ContentType::Form)
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -329,7 +342,8 @@ fn test_bad_new_task_form_submissions() {
         // Submit a form without a name field. This is same as just above pattern.
         let res = client.post("/")
             .header(ContentType::Form)
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -340,7 +354,8 @@ fn test_bad_new_task_form_submissions() {
         let res = client.post("/")
             .header(ContentType::Form)
             .body("name=")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -355,7 +370,8 @@ fn test_bad_new_label_form_submissions() {
         // because label form in index page has `name` and `color` field.
         let res = client.post("/label")
             .header(ContentType::Form)
-            .dispatch();
+            .dispatch()
+            .await;
 
             let mut cookies = res.headers().get("Set-Cookie");
             assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -365,7 +381,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("color=#123456")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -375,7 +392,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("name=mylabel")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -386,7 +404,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("name=&color=#ff00ff")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -397,7 +416,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("name=mylabel&color=")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -408,7 +428,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("name=mylabel&color=red")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -418,7 +439,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("name=mylabel&color=#1234567")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -428,7 +450,8 @@ fn test_bad_new_label_form_submissions() {
         let res = client.post("/label")
             .header(ContentType::Form)
             .body("name=mylabel&color=#12345")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -444,15 +467,17 @@ fn test_bad_update_form_submissions() {
         client.post("/")
             .header(ContentType::Form)
             .body(format!("name={}", task_name))
-            .dispatch();
-        let inserted_id = Task::all(&conn)[0].id.unwrap();
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
         let post_url = format!("/{}", inserted_id);
 
         // Submit an **empty** form. This is an unexpected pattern
         // because task form in detail page has some fields.
         let res = client.post(&post_url)
             .header(ContentType::Form)
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -462,7 +487,8 @@ fn test_bad_update_form_submissions() {
         let res = client.post(&post_url)
             .header(ContentType::Form)
             .body("description=hello")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
@@ -473,7 +499,8 @@ fn test_bad_update_form_submissions() {
         let res = client.post(&post_url)
             .header(ContentType::Form)
             .body("name=&description=hello&updated_at=2020-04-28")
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -492,19 +519,19 @@ fn test_update_date() {
             .take(7)
             .collect();
 
-        let t = Task::insert_with_old_date(&rng_name, &conn);
+        let t = Task::insert_with_old_date(&rng_name, &conn).await;
         assert!(t);
 
         // Ensure `updated_at` of created task is updated to today.
-        let new_tasks = Task::all(&conn);
+        let new_tasks = Task::all(&conn).await;
         let today_str = Local::today().naive_local().to_string();
         // First, ensure current task date is not today.
         assert_ne!(new_tasks[0].updated_at, today_str);
 
         let inserted_id = new_tasks[0].id.unwrap(); // `id` is `Nullable`
-        let res = client.post(format!("/{}/date", inserted_id)).dispatch();
+        let res = client.post(format!("/{}/date", inserted_id)).dispatch().await;
         let mut cookies = res.headers().get("Set-Cookie");
-        let final_tasks = Task::all(&conn);
+        let final_tasks = Task::all(&conn).await;
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
         assert_eq!(final_tasks[0].updated_at, today_str);
@@ -516,31 +543,33 @@ fn test_update_task() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name = "updatetasktest".to_string();
-        let t = Task::insert_with_old_date(&task_name, &conn);
+        let t = Task::insert_with_old_date(&task_name, &conn).await;
         assert!(t);
 
         // Create new label, too.
         client.post("/label")
             .header(ContentType::Form)
             .body("name=newlabel&color=#eeeeee".to_string())
-            .dispatch();
+            .dispatch()
+            .await;
 
         // Submit valid update form.
-        let inserted_id = Task::all(&conn)[0].id.unwrap();
-        let inserted_label_id = Label::all(&conn)[0].id.unwrap();
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+        let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
         let task_description = "newdescription".to_string();
         let dt = Local::today().naive_local().to_string();
         let form_data = format!("name={}&description={}&updated_at={}&label_id={}", task_name, task_description, dt, inserted_label_id);
         let res = client.post(format!("/{}", inserted_id))
             .header(ContentType::Form)
             .body(form_data)
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
 
-        let updated_task = Task::task_by_id(inserted_id, &conn);
+        let updated_task = Task::task_by_id(inserted_id, &conn).await;
         assert_eq!(updated_task.name, task_name);
         assert_eq!(updated_task.description, task_description);
         assert_eq!(updated_task.updated_at, dt);
@@ -551,13 +580,14 @@ fn test_update_task() {
         let res = client.post(format!("/{}", inserted_id))
             .header(ContentType::Form)
             .body(form_data)
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
 
-        let updated_task = Task::task_by_id(inserted_id, &conn);
+        let updated_task = Task::task_by_id(inserted_id, &conn).await;
         assert_eq!(updated_task.label_id, None);
     })
 }
@@ -569,8 +599,8 @@ fn test_update_label() {
         client.post("/label")
             .header(ContentType::Form)
             .body("name=newlabel&color=#eeeeee".to_string())
-            .dispatch();
-        let inserted_id = Label::all(&conn)[0].id.unwrap();
+            .dispatch().await;
+        let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
         // Update above label.
         let new_name = "newnewlabel".to_string();
@@ -579,13 +609,14 @@ fn test_update_label() {
         let res = client.post(format!("/label/{}", inserted_id))
             .header(ContentType::Form)
             .body(form_data)
-            .dispatch();
+            .dispatch()
+            .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
 
-        let updated_label = Label::label_by_id(inserted_id, &conn);
+        let updated_label = Label::label_by_id(inserted_id, &conn).await;
         assert_eq!(updated_label.name, new_name);
         assert_eq!(updated_label.color_hex, new_color);
     })
