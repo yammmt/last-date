@@ -1,7 +1,3 @@
-extern crate regex;
-extern crate rocket;
-extern crate serde_derive;
-
 use crate::DbConn;
 use crate::models::label::{Label, LabelForm};
 
@@ -9,6 +5,7 @@ use regex::Regex;
 use rocket::form::Form;
 use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
+use rocket::serde::Serialize;
 use rocket_dyn_templates::Template;
 
 #[derive(Debug, Serialize)]
