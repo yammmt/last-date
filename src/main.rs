@@ -39,7 +39,8 @@ async fn run_db_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket
 }
 
-fn rocket() -> Rocket<Build> {
+#[launch]
+fn rocket() -> _ {
     rocket::build()
         .attach(DbConn::fairing())
         .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
@@ -61,8 +62,4 @@ fn rocket() -> Rocket<Build> {
             routes::label::delete
         ])
         .attach(Template::fairing())
-}
-
-fn main() {
-    rocket().launch();
 }
