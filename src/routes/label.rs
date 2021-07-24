@@ -1,6 +1,5 @@
 extern crate regex;
 extern crate rocket;
-extern crate rocket_contrib;
 extern crate serde_derive;
 
 use crate::DbConn;
@@ -10,7 +9,7 @@ use regex::Regex;
 use rocket::form::Form;
 use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
-use rocket_contrib::templates::Template;
+use rocket_dyn_templates::Template;
 
 #[derive(Debug, Serialize)]
 struct IndexContext<'a, 'b>{ msg: Option<(&'a str, &'b str)>, labels: Vec<Label> }
@@ -72,11 +71,11 @@ pub async fn new(label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
 }
 
 #[get("/label")]
-pub async fn index(msg: Option<FlashMessage>, conn: DbConn) -> Template {
+pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
         "label/index",
         &match msg {
-            Some(ref msg) => IndexContext::raw(&conn, Some((msg.name(), msg.msg()))).await,
+            Some(ref msg) => IndexContext::raw(&conn, Some((msg.kind(), msg.message()))).await,
             None => IndexContext::raw(&conn, None).await,
         },
     )
@@ -99,11 +98,11 @@ pub async fn update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash
 }
 
 #[get("/label/<id>/edit", rank = 0)]
-pub async fn edit(id: i32, msg: Option<FlashMessage>, conn: DbConn) -> Template {
+pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
         "label/edit",
         &match msg {
-            Some(ref msg) => UpdateContext::raw(id, &conn, Some((msg.name(), msg.msg()))).await,
+            Some(ref msg) => UpdateContext::raw(id, &conn, Some((msg.kind(), msg.message()))).await,
             None => UpdateContext::raw(id, &conn, None).await,
         },
     )

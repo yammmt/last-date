@@ -14,7 +14,7 @@ use diesel::Connection;
 use rocket::{Build, Rocket};
 use rocket::fairing::AdHoc;
 use rocket::fs::{FileServer, relative};
-use rocket_contrib::templates::Template;
+use rocket_dyn_templates::Template;
 use rocket_sync_db_pools::database;
 
 embed_migrations!();
