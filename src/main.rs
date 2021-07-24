@@ -44,6 +44,7 @@ fn rocket() -> _ {
     rocket::build()
         .attach(DbConn::fairing())
         .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
+        .attach(Template::fairing())
         .mount("/", FileServer::from(relative!("static")))
         .mount("/", routes![
             routes::task::index,
@@ -61,5 +62,4 @@ fn rocket() -> _ {
             routes::label::confirm,
             routes::label::delete
         ])
-        .attach(Template::fairing())
 }
