@@ -4,14 +4,15 @@
 
 use super::models::label::Label;
 use super::models::task::Task;
-use parking_lot::Mutex;
+
+use parking_lot::{const_mutex, Mutex};
 use rand::{Rng, thread_rng, distributions::Alphanumeric};
 
 use rocket::local::asynchronous::Client;
 use rocket::http::{Status, ContentType};
 use chrono::Local;
 
-static DB_LOCK: Mutex<()> = Mutex::new(());
+static DB_LOCK: Mutex<()> = const_mutex(());
 
 macro_rules! run_test {
     (|$client:ident, $conn:ident| $block:expr) => ({

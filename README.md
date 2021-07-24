@@ -14,8 +14,6 @@ This app's purpose is to remind **me** of forgotten daily tasks like cleaning in
 
 First, we have to install `sqlite3`.
 
-We have to use **nightly** Rust because Web framework [Rocket](https://rocket.rs/) uses it.
-
 ```bash
 git clone https://github.com/yammmt/last-date.git
 cd last-date
