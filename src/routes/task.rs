@@ -17,18 +17,22 @@ struct ByLabelContext{ tasks: Vec<Task>, label: Label}
 
 impl<'a, 'b> IndexContext<'a, 'b> {
     pub async fn err(conn: &DbConn, msg: &'a str) -> IndexContext<'static, 'a> {
+        let tasks = Task::all(conn).await;
+        let labels = Label::all(conn).await;
         IndexContext {
             msg: Some(("warning", msg)),
-            tasks: Task::all(conn).await,
-            labels: Label::all(conn).await,
+            tasks,
+            labels,
         }
     }
 
     pub async fn raw(conn: &DbConn, msg: Option<(&'a str, &'b str)>) -> IndexContext<'a, 'b> {
+        let tasks = Task::all(conn).await;
+        let labels = Label::all(conn).await;
         IndexContext {
             msg,
-            tasks: Task::all(conn).await,
-            labels: Label::all(conn).await,
+            tasks,
+            labels,
         }
     }
 }
@@ -39,19 +43,23 @@ impl<'a, 'b> SingleContext<'a, 'b> {
         conn: &DbConn,
         msg: Option<(&'a str, &'b str)>,
     ) -> SingleContext<'a, 'b> {
+        let task = Task::task_by_id(id, conn).await;
+        let labels = Label::all(conn).await;
         SingleContext {
             msg,
-            task: Task::task_by_id(id, conn).await,
-            labels: Label::all(conn).await,
+            task,
+            labels,
         }
     }
 }
 
 impl ByLabelContext {
     pub async fn raw(label_id: i32, conn: &DbConn) -> ByLabelContext {
+        let tasks = Task::tasks_by_label(label_id, conn).await;
+        let label = Label::label_by_id(label_id, conn).await;
         ByLabelContext {
-            tasks: Task::tasks_by_label(label_id, conn).await,
-            label: Label::label_by_id(label_id, conn).await,
+            tasks,
+            label,
         }
     }
 }
