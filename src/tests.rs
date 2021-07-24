@@ -2,13 +2,10 @@
 // If you won't, please set environment variable for example:
 // `export ROCKET_DATABASES='{sqlite_database={url="db/mydb.sqlite"}}'`
 
-extern crate parking_lot;
-extern crate rand;
-
 use super::models::label::Label;
 use super::models::task::Task;
-use self::parking_lot::Mutex;
-use self::rand::{Rng, thread_rng, distributions::Alphanumeric};
+use parking_lot::Mutex;
+use rand::{Rng, thread_rng, distributions::Alphanumeric};
 
 use rocket::local::asynchronous::Client;
 use rocket::http::{Status, ContentType};
