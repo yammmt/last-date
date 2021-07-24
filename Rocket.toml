@@ -1,12 +1,12 @@
 [global]
 template_dir = "static"
 
-[development]
+[debug]
 databases = { sqlite_database = { url = "db/dev.sqlite" } }
 
 [staging]
 databases = { sqlite_database = { url = "db/staging.sqlite" } }
 
-[production]
+[release]
 databases = { sqlite_database = { url = "db/prod.sqlite" } }
 address = "0.0.0.0"

@@ -18,6 +18,7 @@ use self::schema::tasks;
 use self::schema::tasks::dsl::tasks as all_tasks;
 
 use crate::models::label::Label;
+use crate::DbConn;
 
 #[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
 #[table_name="tasks"]
@@ -44,60 +45,107 @@ pub struct TaskUpdate {
 }
 
 impl Task {
-    pub fn all(conn: &SqliteConnection) -> Vec<Task> {
+    pub async fn all(conn: &DbConn) -> Vec<Task> {
         // Task hasn't been done for a long time should be in the top.
-        all_tasks.order(tasks::updated_at.asc()).load::<Task>(conn).unwrap()
+        conn.run(|c| {
+            all_tasks
+                .order(tasks::updated_at.asc())
+                .load::<Task>(c)
+                .unwrap_or_default()
+        })
+        .await
     }
 
     #[cfg(test)]
-    pub fn all_by_id(conn: &SqliteConnection) -> Vec<Task> {
+    pub async fn all_by_id(conn: &DbConn) -> Vec<Task> {
         // I don't know why sometimes `all` called by `test_many_insertions`
         // invites SIGSEGV: invalid memory reference error...
-        all_tasks.order(tasks::id.desc()).load::<Task>(conn).unwrap()
+        conn.run(|c| all_tasks.order(tasks::id.desc()).load::<Task>(c).unwrap())
+            .await
     }
 
-    pub fn task_by_id(id: i32, conn: &SqliteConnection) -> Task {
-        all_tasks.find(id).load::<Task>(conn).unwrap().first().unwrap().clone()
+    pub async fn task_by_id(id: i32, conn: &DbConn) -> Task {
+        conn.run(move |c| {
+            all_tasks
+                .find(id)
+                .load::<Task>(c)
+                .unwrap()
+                .first()
+                .unwrap()
+                .clone()
+        })
+        .await
     }
 
-    pub fn tasks_by_label(label_id: i32, conn: &SqliteConnection) -> Vec<Task> {
-        let label = Label::label_by_id(label_id, conn);
-        Task::belonging_to(&label).order(tasks::name).load::<Task>(conn).unwrap()
+    pub async fn tasks_by_label(label_id: i32, conn: &DbConn) -> Vec<Task> {
+        let label = Label::label_by_id(label_id, conn).await;
+        conn.run(move |c| {
+            Task::belonging_to(&label)
+                .order(tasks::name)
+                .load::<Task>(c)
+                .unwrap()
+        })
+        .await
     }
 
-    pub fn insert(task_name: TaskName, conn: &SqliteConnection) -> bool {
+    pub async fn insert(task_name: TaskName, conn: &DbConn) -> bool {
         let dt = Local::today().naive_local();
         let t = Task { id: None, name: task_name.name, description: "".to_string(), updated_at: dt.to_string(), label_id: None };
-        diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
+        conn.run(move |c| {
+            diesel::insert_into(tasks::table)
+                .values(&t)
+                .execute(c)
+                .is_ok()
+        })
+        .await
     }
 
     #[cfg(test)]
-    pub fn insert_with_old_date(dummy_name: &str, conn: &SqliteConnection) -> bool {
+    pub async fn insert_with_old_date(dummy_name: &str, conn: &DbConn) -> bool {
         let t = Task { id: None, name: dummy_name.to_string(), description: "".to_string(), updated_at: "2000-01-01".to_string(), label_id: None };
-        diesel::insert_into(tasks::table).values(&t).execute(conn).is_ok()
+        conn.run(move |c| {
+            diesel::insert_into(tasks::table)
+                .values(&t)
+                .execute(c)
+                .is_ok()
+        })
+        .await
     }
 
-    pub fn update(id: i32, task: TaskUpdate, conn: &SqliteConnection) -> bool {
-        diesel::update(all_tasks.find(id))
-            .set((
-                tasks::name.eq(task.name),
-                tasks::description.eq(task.description),
-                tasks::updated_at.eq(task.updated_at),
-                tasks::label_id.eq(task.label_id)
-            )).execute(conn).is_ok()
+    pub async fn update(id: i32, task: TaskUpdate, conn: &DbConn) -> bool {
+        conn.run(move |c| {
+            diesel::update(all_tasks.find(id))
+                .set((
+                    tasks::name.eq(task.name),
+                    tasks::description.eq(task.description),
+                    tasks::updated_at.eq(task.updated_at),
+                    tasks::label_id.eq(task.label_id),
+                ))
+                .execute(c)
+                .is_ok()
+        })
+        .await
     }
 
-    pub fn update_to_today(id: i32, conn: &SqliteConnection) -> bool {
+    pub async fn update_to_today(id: i32, conn: &DbConn) -> bool {
         let dt = Local::today().naive_local();
-        diesel::update(all_tasks.find(id)).set(tasks::updated_at.eq(dt.to_string())).execute(conn).is_ok()
+        conn.run(move |c| {
+            diesel::update(all_tasks.find(id))
+                .set(tasks::updated_at.eq(dt.to_string()))
+                .execute(c)
+                .is_ok()
+        })
+        .await
     }
 
-    pub fn delete_with_id(id: i32, conn: &SqliteConnection) -> bool {
-        diesel::delete(all_tasks.find(id)).execute(conn).is_ok()
+    pub async fn delete_with_id(id: i32, conn: &DbConn) -> bool {
+        conn.run(move |c| diesel::delete(all_tasks.find(id)).execute(c).is_ok())
+            .await
     }
 
     #[cfg(test)]
-    pub fn delete_all(conn: &SqliteConnection) -> bool {
-        diesel::delete(all_tasks).execute(conn).is_ok()
+    pub async fn delete_all(conn: &DbConn) -> bool {
+        conn.run(|c| diesel::delete(all_tasks).execute(c).is_ok())
+            .await
     }
 }
