@@ -21,7 +21,7 @@ use crate::models::label::Label;
 use crate::DbConn;
 
 #[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
-#[table_name="tasks"]
+#[table_name = "tasks"]
 #[belongs_to(Label, foreign_key = "label_id")]
 pub struct Task {
     pub id: Option<i32>,
@@ -41,7 +41,7 @@ pub struct TaskUpdate {
     pub name: String,
     pub description: String,
     pub updated_at: String,
-    pub label_id: Option<i32>
+    pub label_id: Option<i32>,
 }
 
 impl Task {
@@ -90,7 +90,13 @@ impl Task {
 
     pub async fn insert(task_name: TaskName, conn: &DbConn) -> bool {
         let dt = Local::today().naive_local();
-        let t = Task { id: None, name: task_name.name, description: "".to_string(), updated_at: dt.to_string(), label_id: None };
+        let t = Task {
+            id: None,
+            name: task_name.name,
+            description: "".to_string(),
+            updated_at: dt.to_string(),
+            label_id: None,
+        };
         conn.run(move |c| {
             diesel::insert_into(tasks::table)
                 .values(&t)
@@ -102,7 +108,13 @@ impl Task {
 
     #[cfg(test)]
     pub async fn insert_with_old_date(dummy_name: &str, conn: &DbConn) -> bool {
-        let t = Task { id: None, name: dummy_name.to_string(), description: "".to_string(), updated_at: "2000-01-01".to_string(), label_id: None };
+        let t = Task {
+            id: None,
+            name: dummy_name.to_string(),
+            description: "".to_string(),
+            updated_at: "2000-01-01".to_string(),
+            label_id: None,
+        };
         conn.run(move |c| {
             diesel::insert_into(tasks::table)
                 .values(&t)

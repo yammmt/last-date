@@ -1,17 +1,23 @@
-#[macro_use] extern crate rocket;
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_migrations;
-#[macro_use] extern crate log;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate rocket;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate serde_derive;
 
 mod models;
 mod routes;
-#[cfg(test)] mod tests;
+#[cfg(test)]
+mod tests;
 
 use diesel::Connection;
-use rocket::{Build, Rocket};
 use rocket::fairing::AdHoc;
-use rocket::fs::{FileServer, relative};
+use rocket::fs::{relative, FileServer};
+use rocket::{Build, Rocket};
 use rocket_dyn_templates::Template;
 use rocket_sync_db_pools::database;
 
@@ -44,20 +50,23 @@ fn rocket() -> _ {
         .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
         .attach(Template::fairing())
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![
-            routes::task::index,
-            routes::task::new,
-            routes::task::update_date,
-            routes::task::update,
-            routes::task::edit,
-            routes::task::delete,
-            routes::task::confirm,
-            routes::task::by_label,
-            routes::label::index,
-            routes::label::new,
-            routes::label::update,
-            routes::label::edit,
-            routes::label::confirm,
-            routes::label::delete
-        ])
+        .mount(
+            "/",
+            routes![
+                routes::task::index,
+                routes::task::new,
+                routes::task::update_date,
+                routes::task::update,
+                routes::task::edit,
+                routes::task::delete,
+                routes::task::confirm,
+                routes::task::by_label,
+                routes::label::index,
+                routes::label::new,
+                routes::label::update,
+                routes::label::edit,
+                routes::label::confirm,
+                routes::label::delete
+            ],
+        )
 }
