@@ -37,8 +37,6 @@ jobs:
         echo "C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_PATH
         echo "SQLITE3_LIB_DIR=C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_ENV
         echo "SQLITE_DATABASE_URL=C:\test.db" >> $GITHUB_ENV
-    - name: Use nightly
-      run: rustup default nightly
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -56,7 +54,7 @@ jobs:
         sudo apt-get install libsqlite3-dev
     - uses: actions-rs/toolchain@v1.0.7
       with:
-          toolchain: nightly
+          toolchain: stable
           components: clippy
           override: true
     - uses: actions-rs/clippy-check@v1.0.7
