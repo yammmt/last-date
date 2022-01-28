@@ -27,5 +27,5 @@ version = "0.1.0-rc.1"
 features = ["diesel_sqlite_pool"]
 
 [dev-dependencies]
-parking_lot = "^0.11"
+parking_lot = "^0.12"
 rand = "0.8.4"
