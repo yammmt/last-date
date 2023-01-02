@@ -89,7 +89,7 @@ impl Task {
     }
 
     pub async fn insert(task_name: TaskName, conn: &DbConn) -> bool {
-        let dt = Local::today().naive_local();
+        let dt = Local::now().naive_local();
         let t = Task {
             id: None,
             name: task_name.name,
@@ -140,7 +140,7 @@ impl Task {
     }
 
     pub async fn update_to_today(id: i32, conn: &DbConn) -> bool {
-        let dt = Local::today().naive_local();
+        let dt = Local::now().naive_local();
         conn.run(move |c| {
             diesel::update(all_tasks.find(id))
                 .set(tasks::updated_at.eq(dt.to_string()))

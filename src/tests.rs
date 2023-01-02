@@ -153,7 +153,7 @@ fn tasks_by_label_page() {
         let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
 
         // Attach label to several tasks.
-        let dt = Local::today().naive_local().to_string();
+        let dt = Local::now().naive_local().to_string();
         for i in 0..2 {
             let form_data = format!(
                 "name={}&description=&updated_at={}&label_id={}",
@@ -268,7 +268,7 @@ fn test_insertion_deletion() {
         assert_eq!(new_tasks[0].description, "");
         assert_eq!(
             new_tasks[0].updated_at,
-            Local::today().naive_local().to_string()
+            Local::now().naive_local().to_string()
         );
         assert_eq!(new_tasks[0].label_id, None);
 
@@ -564,7 +564,7 @@ fn test_update_date() {
 
         // Ensure `updated_at` of created task is updated to today.
         let new_tasks = Task::all(&conn).await;
-        let today_str = Local::today().naive_local().to_string();
+        let today_str = Local::now().naive_local().to_string();
         // First, ensure current task date is not today.
         assert_ne!(new_tasks[0].updated_at, today_str);
 
@@ -601,7 +601,7 @@ fn test_update_task() {
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
         let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
         let task_description = "newdescription".to_string();
-        let dt = Local::today().naive_local().to_string();
+        let dt = Local::now().naive_local().to_string();
         let form_data = format!(
             "name={}&description={}&updated_at={}&label_id={}",
             task_name, task_description, dt, inserted_label_id
