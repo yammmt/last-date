@@ -82,7 +82,7 @@ pub async fn new(label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
 pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
         "label/index",
-        &match msg {
+        match msg {
             Some(ref msg) => IndexContext::raw(&conn, Some((msg.kind(), msg.message()))).await,
             None => IndexContext::raw(&conn, None).await,
         },
@@ -112,7 +112,7 @@ pub async fn update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash
 pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
         "label/edit",
-        &match msg {
+        match msg {
             Some(ref msg) => UpdateContext::raw(id, &conn, Some((msg.kind(), msg.message()))).await,
             None => UpdateContext::raw(id, &conn, None).await,
         },
@@ -134,7 +134,7 @@ pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> 
     } else {
         Err(Template::render(
             "label/index",
-            &IndexContext::err(&conn, "Couldn't delete label.").await,
+            IndexContext::err(&conn, "Couldn't delete label.").await,
         ))
     }
 }

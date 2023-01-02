@@ -80,7 +80,7 @@ pub async fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
 pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
         "task/index",
-        &match msg {
+        match msg {
             Some(ref msg) => IndexContext::raw(&conn, Some((msg.kind(), msg.message()))).await,
             None => IndexContext::raw(&conn, None).await,
         },
@@ -108,7 +108,7 @@ pub async fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
 pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
         "task/edit",
-        &match msg {
+        match msg {
             Some(ref msg) => SingleContext::raw(id, &conn, Some((msg.kind(), msg.message()))).await,
             None => SingleContext::raw(id, &conn, None).await,
         },
@@ -140,7 +140,7 @@ pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> 
     } else {
         Err(Template::render(
             "task/index",
-            &IndexContext::err(&conn, "Couldn't delete task.").await,
+            IndexContext::err(&conn, "Couldn't delete task.").await,
         ))
     }
 }
