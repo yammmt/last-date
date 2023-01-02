@@ -8,7 +8,7 @@ use super::models::task::Task;
 use parking_lot::{const_mutex, Mutex};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
-use chrono::Local;
+use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use rocket::http::{ContentType, Status};
 use rocket::local::asynchronous::Client;
 
@@ -258,6 +258,7 @@ fn test_insertion_deletion() {
             .body("name=test+task")
             .dispatch()
             .await;
+        let time_posted_ndt = Local::now().naive_local();
 
         // Ensure we have one more task in the DB.
         let new_tasks = Task::all(&conn).await;
@@ -266,9 +267,12 @@ fn test_insertion_deletion() {
         // Ensure the task is what we expect.
         assert_eq!(new_tasks[0].name, "test task");
         assert_eq!(new_tasks[0].description, "");
-        assert_eq!(
-            new_tasks[0].updated_at,
-            Local::now().naive_local().to_string()
+
+        assert!(
+            time_posted_ndt
+                - NaiveDateTime::parse_from_str(&new_tasks[0].updated_at, "%Y-%m-%d %H:%M:%S%.f")
+                    .unwrap()
+                < Duration::seconds(5)
         );
         assert_eq!(new_tasks[0].label_id, None);
 
@@ -564,9 +568,10 @@ fn test_update_date() {
 
         // Ensure `updated_at` of created task is updated to today.
         let new_tasks = Task::all(&conn).await;
-        let today_str = Local::now().naive_local().to_string();
+        let today_ndt = Local::now().naive_local();
         // First, ensure current task date is not today.
-        assert_ne!(new_tasks[0].updated_at, today_str);
+        let new_task_nd = NaiveDate::parse_from_str(&new_tasks[0].updated_at, "%Y-%m-%d").unwrap();
+        assert_ne!(new_task_nd, today_ndt.date());
 
         let inserted_id = new_tasks[0].id.unwrap(); // `id` is `Nullable`
         let res = client
@@ -575,9 +580,12 @@ fn test_update_date() {
             .await;
         let mut cookies = res.headers().get("Set-Cookie");
         let final_tasks = Task::all(&conn).await;
+        let final_task_ndt =
+            NaiveDateTime::parse_from_str(&final_tasks[0].updated_at, "%Y-%m-%d %H:%M:%S%.f")
+                .unwrap();
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
-        assert_eq!(final_tasks[0].updated_at, today_str);
+        assert_eq!(final_task_ndt.date(), today_ndt.date());
     })
 }
 
