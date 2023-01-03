@@ -60,7 +60,7 @@ The procedure to generate css files is the following:
 1. Clone submodule repository by `git submodule update --init --recursive`.
 1. Move to `static` directory.
 1. Update `static/mystyles.scss` file.
-1. Generate `static/css/mystyles.css` file by `sass --sourcemap=none mystyles.scss:css/mystyles.css --style compressed`.
+1. Generate `static/css/mystyles.css` file by `sass --no-source-map mystyles.scss:css/mystyles.css --style compressed`.
 
 #### Formatter
 
