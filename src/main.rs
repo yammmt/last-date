@@ -24,25 +24,19 @@ pub struct DbConn(diesel::SqliteConnection);
 async fn run_db_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
     use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-    DbConn::get_one(&rocket)
-        .await
-        .expect("database connection")
-        .run(|conn| {
-            conn.run_pending_migrations(MIGRATIONS)
-                .expect("diesel migrations");
-        })
-        .await;
+    let conn = DbConn::get_one(&rocket).await.expect("database connection");
 
-    // want to show error message
-    // want to DRY
-    DbConn::get_one(&rocket)
-        .await
-        .expect("database connection")
-        .run(|conn| {
-            conn.batch_execute("PRAGMA foreign_keys = ON")
-                .expect("Failed to enable foreign keys")
-        })
-        .await;
+    conn.run(|conn| {
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("diesel migrations");
+    })
+    .await;
+
+    conn.run(|conn| {
+        conn.batch_execute("PRAGMA foreign_keys = ON")
+            .expect("Failed to enable foreign keys")
+    })
+    .await;
 
     rocket
 }
