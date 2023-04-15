@@ -15,13 +15,12 @@ mod schema {
 }
 
 use self::schema::tasks;
-use self::schema::tasks::dsl::tasks as all_tasks;
 
 use crate::models::label::Label;
 use crate::DbConn;
 
 #[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
-#[table_name = "tasks"]
+#[diesel(table_name = tasks)]
 #[belongs_to(Label, foreign_key = "label_id")]
 pub struct Task {
     pub id: Option<i32>,
@@ -48,7 +47,7 @@ impl Task {
     pub async fn all(conn: &DbConn) -> Vec<Task> {
         // Task hasn't been done for a long time should be in the top.
         conn.run(|c| {
-            all_tasks
+            tasks::table
                 .order(tasks::updated_at.asc())
                 .load::<Task>(c)
                 .unwrap_or_default()
@@ -60,14 +59,19 @@ impl Task {
     pub async fn all_by_id(conn: &DbConn) -> Vec<Task> {
         // I don't know why sometimes `all` called by `test_many_insertions`
         // invites SIGSEGV: invalid memory reference error...
-        conn.run(|c| all_tasks.order(tasks::id.desc()).load::<Task>(c).unwrap())
-            .await
+        conn.run(|c| {
+            tasks::table
+                .order(tasks::id.desc())
+                .load::<Task>(c)
+                .unwrap()
+        })
+        .await
     }
 
     pub async fn task_by_id(id: i32, conn: &DbConn) -> Task {
         conn.run(move |c| {
-            all_tasks
-                .find(id)
+            tasks::table
+                .filter(tasks::id.eq(id))
                 .load::<Task>(c)
                 .unwrap()
                 .first()
@@ -126,7 +130,7 @@ impl Task {
 
     pub async fn update(id: i32, task: TaskUpdate, conn: &DbConn) -> bool {
         conn.run(move |c| {
-            diesel::update(all_tasks.find(id))
+            diesel::update(tasks::table.filter(tasks::id.eq(id)))
                 .set((
                     tasks::name.eq(task.name),
                     tasks::description.eq(task.description),
@@ -142,7 +146,7 @@ impl Task {
     pub async fn update_to_today(id: i32, conn: &DbConn) -> bool {
         let dt = Local::now().naive_local();
         conn.run(move |c| {
-            diesel::update(all_tasks.find(id))
+            diesel::update(tasks::table.filter(tasks::id.eq(id)))
                 .set(tasks::updated_at.eq(dt.to_string()))
                 .execute(c)
                 .is_ok()
@@ -151,13 +155,17 @@ impl Task {
     }
 
     pub async fn delete_with_id(id: i32, conn: &DbConn) -> bool {
-        conn.run(move |c| diesel::delete(all_tasks.find(id)).execute(c).is_ok())
-            .await
+        conn.run(move |c| {
+            diesel::delete(tasks::table.filter(tasks::id.eq(id)))
+                .execute(c)
+                .is_ok()
+        })
+        .await
     }
 
     #[cfg(test)]
     pub async fn delete_all(conn: &DbConn) -> bool {
-        conn.run(|c| diesel::delete(all_tasks).execute(c).is_ok())
+        conn.run(|c| diesel::delete(tasks::table).execute(c).is_ok())
             .await
     }
 }

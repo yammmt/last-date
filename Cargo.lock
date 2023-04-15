@@ -241,32 +241,12 @@ checksum = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
 
 [[package]]
 name = "devise"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50c7580b072f1c8476148f16e0a0d5dedddab787da98d86c5082c5e9ed8ab595"
-dependencies = [
- "devise_codegen 0.3.1",
- "devise_core 0.3.1",
-]
-
-[[package]]
-name = "devise"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6eacefd3f541c66fc61433d65e54e0e46e0a029a819a7dbbc7a7b489e8a85f8"
 dependencies = [
- "devise_codegen 0.4.1",
- "devise_core 0.4.1",
-]
-
-[[package]]
-name = "devise_codegen"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "123c73e7a6e51b05c75fe1a1b2f4e241399ea5740ed810b0e3e6cacd9db5e7b2"
-dependencies = [
- "devise_core 0.3.1",
- "quote",
+ "devise_codegen",
+ "devise_core",
 ]
 
 [[package]]
@@ -275,21 +255,8 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8cf4b8dd484ede80fd5c547592c46c3745a617c8af278e2b72bea86b2dfed6"
 dependencies = [
- "devise_core 0.4.1",
+ "devise_core",
  "quote",
-]
-
-[[package]]
-name = "devise_core"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "841ef46f4787d9097405cac4e70fb8644fc037b526e8c14054247c0263c400d0"
-dependencies = [
- "bitflags 1.2.1",
- "proc-macro2",
- "proc-macro2-diagnostics 0.9.1",
- "quote",
- "syn 1.0.107",
 ]
 
 [[package]]
@@ -307,11 +274,10 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "1.4.8"
+version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b28135ecf6b7d446b43e27e225622a038cc4e2930a1022f51cdb97ada19b8e4d"
+checksum = "4391a22b19c916e50bec4d6140f29bdda3e3bb187223fe6e3ea0b6e4d1021c04"
 dependencies = [
- "byteorder",
  "chrono",
  "diesel_derives",
  "libsqlite3-sys",
@@ -320,10 +286,11 @@ dependencies = [
 
 [[package]]
 name = "diesel_derives"
-version = "1.4.1"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45f5098f628d02a7a0f68ddba586fb61e80edec3bdc1be3b921f4ceec60858d3"
+checksum = "0ad74fdcf086be3d4fdd142f67937678fe60ed431c3b2f08599e7687269410c4"
 dependencies = [
+ "proc-macro-error",
  "proc-macro2",
  "quote",
  "syn 1.0.107",
@@ -331,10 +298,11 @@ dependencies = [
 
 [[package]]
 name = "diesel_migrations"
-version = "1.4.0"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf3cde8413353dc7f5d72fa8ce0b99a560a359d2c5ef1e5817ca731cd9008f4c"
+checksum = "e9ae22beef5e9d6fab9225ddb073c1c6c1a7a6ded5019d5da11d1e5c5adc34e2"
 dependencies = [
+ "diesel",
  "migrations_internals",
  "migrations_macros",
 ]
@@ -897,23 +865,23 @@ checksum = "b16bd47d9e329435e309c58469fe0791c2d0d1ba96ec0954152a5ae2b04387dc"
 
 [[package]]
 name = "migrations_internals"
-version = "1.4.1"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b4fc84e4af020b837029e017966f86a1c2d5e83e64b589963d5047525995860"
+checksum = "c493c09323068c01e54c685f7da41a9ccf9219735c3766fbfd6099806ea08fbc"
 dependencies = [
- "diesel",
+ "serde",
+ "toml",
 ]
 
 [[package]]
 name = "migrations_macros"
-version = "1.4.2"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9753f12909fd8d923f75ae5c3258cae1ed3c8ec052e1b38c93c21a6d157f789c"
+checksum = "8a8ff27a350511de30cdabb77147501c36ef02e0451d957abea2f30caffb2b58"
 dependencies = [
  "migrations_internals",
  "proc-macro2",
  "quote",
- "syn 1.0.107",
 ]
 
 [[package]]
@@ -1217,6 +1185,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
+name = "proc-macro-error"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
+dependencies = [
+ "proc-macro-error-attr",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.107",
+ "version_check",
+]
+
+[[package]]
+name = "proc-macro-error-attr"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "version_check",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1400,7 +1392,7 @@ version = "0.5.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7093353f14228c744982e409259fb54878ba9563d08214f2d880d59ff2fc508b"
 dependencies = [
- "devise 0.4.1",
+ "devise",
  "glob",
  "indexmap",
  "proc-macro2",
@@ -1452,9 +1444,9 @@ dependencies = [
 
 [[package]]
 name = "rocket_sync_db_pools"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fa48b6ab25013e9812f1b0c592741900b3a2a83c0936292e0565c0ac842f558"
+checksum = "f6b6bd8a6b33c305404653c05c02ab8fec86cb9e4739e5fd0d2284116e740d08"
 dependencies = [
  "diesel",
  "r2d2",
@@ -1462,15 +1454,16 @@ dependencies = [
  "rocket_sync_db_pools_codegen",
  "serde",
  "tokio",
+ "version_check",
 ]
 
 [[package]]
 name = "rocket_sync_db_pools_codegen"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "280ef2d232923e69cb93da156972eb5476a7cce5ba44843f6608f46a4abf7aab"
+checksum = "dd26d72db34a46b182d79defd99dc5e40c2edb58651262e724d78ddcf1eb2474"
 dependencies = [
- "devise 0.3.1",
+ "devise",
  "quote",
 ]
 

@@ -13,10 +13,9 @@ mod schema {
 use crate::DbConn;
 
 use self::schema::labels;
-use self::schema::labels::dsl::labels as all_labels;
 
 #[derive(Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
-#[table_name = "labels"]
+#[diesel(table_name = labels)]
 pub struct Label {
     pub id: Option<i32>,
     pub name: String,
@@ -32,7 +31,7 @@ pub struct LabelForm {
 impl Label {
     pub async fn all(conn: &DbConn) -> Vec<Label> {
         conn.run(|c| {
-            all_labels
+            labels::table
                 .order(labels::name)
                 .load::<Label>(c)
                 .unwrap_or_default()
@@ -43,8 +42,8 @@ impl Label {
     pub async fn label_by_id(id: i32, conn: &DbConn) -> Label {
         // TODO: avoid cloning `String`: could be slow
         conn.run(move |c| {
-            all_labels
-                .find(id)
+            labels::table
+                .filter(labels::id.eq(id))
                 .load::<Label>(c)
                 .unwrap()
                 .first()
@@ -71,7 +70,7 @@ impl Label {
 
     pub async fn update(id: i32, label: LabelForm, conn: &DbConn) -> bool {
         conn.run(move |c| {
-            diesel::update(all_labels.find(id))
+            diesel::update(labels::table.filter(labels::id.eq(id)))
                 .set((
                     labels::name.eq(label.name),
                     labels::color_hex.eq(label.color),
@@ -83,13 +82,17 @@ impl Label {
     }
 
     pub async fn delete_with_id(id: i32, conn: &DbConn) -> bool {
-        conn.run(move |c| diesel::delete(all_labels.find(id)).execute(c).is_ok())
-            .await
+        conn.run(move |c| {
+            diesel::delete(labels::table.filter(labels::id.eq(id)))
+                .execute(c)
+                .is_ok()
+        })
+        .await
     }
 
     #[cfg(test)]
     pub async fn delete_all(conn: &DbConn) -> bool {
-        conn.run(|c| diesel::delete(all_labels).execute(c).is_ok())
+        conn.run(|c| diesel::delete(labels::table).execute(c).is_ok())
             .await
     }
 }
