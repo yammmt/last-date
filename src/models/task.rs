@@ -21,7 +21,7 @@ use crate::DbConn;
 
 #[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
 #[diesel(table_name = tasks)]
-#[belongs_to(Label, foreign_key = "label_id")]
+#[diesel(belongs_to(Label, foreign_key = label_id))]
 pub struct Task {
     pub id: Option<i32>,
     pub name: String,
