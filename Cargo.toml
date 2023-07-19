@@ -9,7 +9,7 @@ repository = "https://github.com/yammmt/last-date.git"
 
 [dependencies]
 rocket = "0.5.0-rc.3"
-serde = "1.0.171"
+serde = "1.0.172"
 serde_json = "^1.0"
 serde_derive = "1.0.126"
 diesel = { version = "^2.0", features = ["sqlite", "r2d2", "chrono"] }
