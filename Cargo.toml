@@ -16,7 +16,7 @@ diesel = { version = "^2.1", features = ["sqlite", "r2d2", "chrono"] }
 diesel_migrations = "^2.1"
 log = "^0.4"
 chrono = { version = "^0.4", features = ["serde"] }
-regex = "^1.9"
+regex = "^1.10"
 
 [dependencies.rocket_dyn_templates]
 version = "0.1.0-rc.3"
