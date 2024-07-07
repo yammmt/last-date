@@ -1,19 +1,20 @@
 @charset "utf-8";
 
+@use "bulma/sass/utilities";
+
+@use "bulma/sass/base";
+@use "bulma/sass/elements/button";
+@use "bulma/sass/elements/notification";
+@use "bulma/sass/elements/table";
+@use "bulma/sass/elements/title";
+@use "bulma/sass/form";
+@use "bulma/sass/grid";
+@use "bulma/sass/layout/footer";
+@use "bulma/sass/layout/hero";
+@use "bulma/sass/layout/section";
+@use "bulma/sass/themes";
+
 $section-padding: 1rem 1.5rem;
 
 .table tbody tr td { vertical-align: middle; }
 .button { margin: 0.2em auto; }
-
-@import "bulma/sass/utilities/_all.sass";
-@import "bulma/sass/base/_all.sass";
-@import "bulma/sass/helpers/_all.sass";
-@import "bulma/sass/elements/button.sass";
-@import "bulma/sass/elements/container.sass";
-@import "bulma/sass/elements/notification.sass";
-@import "bulma/sass/elements/table.sass";
-@import "bulma/sass/elements/title.sass";
-@import "bulma/sass/form/_all.sass";
-@import "bulma/sass/grid/_all.sass";
-@import "bulma/sass/layout/hero.sass";
-@import "bulma/sass/layout/section.sass";
