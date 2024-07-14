@@ -35,7 +35,7 @@
                                 {% if task.label_id %}
                                 {% for label in labels %}
                                 {% if label.id == task.label_id %}
-                                <button class="button is-outlined" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
+                                <button class="button is-outlined label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
                                     {{ label.name }}
                                 </button>
                                 {% break %}

@@ -18,3 +18,9 @@ $section-padding: 1rem 1.5rem;
 
 .table tbody tr td { vertical-align: middle; }
 .button { margin: 0.2em auto; }
+
+// Use the same font color for both light and dark modes
+// to avoid buttons with inappropriately low contrast.
+//     Note that button's background color is decided by the user.
+.button.label-button { color: black; }
+.tag.label-tag { color: black; }

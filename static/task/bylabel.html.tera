@@ -9,7 +9,7 @@
     <section class="section">
         <div class="container">
             Tasks belong to
-            <span class="tag is-medium" style="background-color: {{ label.color_hex }}">
+            <span class="tag is-medium label-tag" style="background-color: {{ label.color_hex }}">
                 {{ label.name }}
             </span>
 
