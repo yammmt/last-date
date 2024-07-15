@@ -4,7 +4,8 @@
 
 Simple ToDo list based on last date I did.
 
-![index page image](./img/index.jpg)
+![index page image (light)](./img/index_light.png)
+![index page image (dark)](./img/index_dark.png)
 
 ## Purpose
 
