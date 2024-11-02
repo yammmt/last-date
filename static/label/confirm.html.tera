@@ -23,8 +23,8 @@
 
     <section class="section">
         <div class="container">
-            <button class="button is-link is-light" onclick="location.href='./edit'">Back to label</button>
-            <button class="button is-link is-light" onclick="location.href='/'">Back to index page</button>
+            <button class="button button-back is-light" onclick="location.href='./edit'">Back to label</button>
+            <button class="button button-back is-light" onclick="location.href='/'">Back to index page</button>
         </div>
     </section>
 {% endblock content %}
