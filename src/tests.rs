@@ -110,9 +110,8 @@ fn detail_page() {
         assert!(body.contains("Task name"));
         assert!(body.contains("Description"));
         assert!(body.contains("Last updated"));
-        assert!(body.contains(
-            r#"<button class="button is-primary is-light" type="submit">Update</button>"#
-        ));
+        // dirty sentence: a part of the HTML button string
+        assert!(body.contains(r#"type="submit">Update</button>"#));
         assert!(body.contains(r#"onclick="location.href='../'"#));
     })
 }

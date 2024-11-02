@@ -31,7 +31,7 @@
 
                 <div class="field">
                     <div class="control">
-                        <button class="button is-primary is-light" type="submit">Update</button>
+                        <button class="button button-update is-light" type="submit">Update</button>
                     </div>
                 </div>
             </form>

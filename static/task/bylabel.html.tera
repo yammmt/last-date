@@ -28,7 +28,7 @@
                             <td>
                                 <form class="inline" action="{{ task.id }}/date" method="post">
                                     <input type="hidden" name="_method" value="post" />
-                                    <button class="button is-primary is-light" type="submit">I did it today!</button>
+                                    <button class="button button-update is-light" type="submit">I did it today!</button>
                                 </form>
                             </td>
                         </tr>
