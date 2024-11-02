@@ -32,7 +32,7 @@
                         {% for label in labels %}
                         <tr>
                             <td>
-                                <button class="button is-outlined label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ label.id }}'">
+                                <button class="button label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ label.id }}'">
                                     {{ label.name }}
                                 </button>
                             </td>
