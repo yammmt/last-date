@@ -26,6 +26,9 @@ $section-padding: 1rem 1.5rem;
 .button.button-back {
     @extend .is-link;
 }
+.button.button-delete {
+    @extend .is-danger;
+}
 .button.button-update {
     @extend .is-primary;
 }

@@ -200,9 +200,7 @@ fn confirm_page() {
 
         // Ensure confirm page shows buttons
         let body = res.into_string().await.unwrap();
-        assert!(body.contains(
-            r#"<button class="button is-danger is-light" type="submit">Delete</button>"#
-        ));
+        assert!(body.contains(r#"type="submit">Delete</button>"#));
         // If I write full button HTML, `cargo test` hangs up. I don't know why.
         assert!(body.contains("Back to task</button>"));
         assert!(body.contains(r#"onclick="location.href='/'"#));
@@ -230,9 +228,7 @@ fn label_confirm_page() {
 
         // Ensure confirm page shows buttons
         let body = res.into_string().await.unwrap();
-        assert!(body.contains(
-            r#"<button class="button is-danger is-light" type="submit">Delete</button>"#
-        ));
+        assert!(body.contains(r#"type="submit">Delete</button>"#));
         assert!(body.contains("Back to label</button>"));
         assert!(body.contains(r#"onclick="location.href='/'"#));
     })

@@ -16,7 +16,7 @@
         <div class="container">
             <form class="inline" action="/label/{{ label.id }}" method="post">
                 <input type="hidden" name="_method" value="delete" />
-                <button class="button is-danger is-light" type="submit">Delete</button>
+                <button class="button button-delete is-light" type="submit">Delete</button>
             </form>
         </div>
     </section>
