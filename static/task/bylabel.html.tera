@@ -28,7 +28,7 @@
                             <td>
                                 <form class="inline" action="{{ task.id }}/date" method="post">
                                     <input type="hidden" name="_method" value="post" />
-                                    <button class="button is-primary is-light" type="submit">I did it today!</button>
+                                    <button class="button button-update is-light" type="submit">I did it today!</button>
                                 </form>
                             </td>
                         </tr>
@@ -41,7 +41,7 @@
 
     <section class="section">
         <div class="container">
-            <button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>
+            <button class="button button-back is-light" onclick="location.href='../'">Back to index page</button>
         </div>
     </section>
 {% endblock content %}

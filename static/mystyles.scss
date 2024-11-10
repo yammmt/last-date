@@ -23,4 +23,17 @@ $section-padding: 1rem 1.5rem;
 // to avoid buttons with inappropriately low contrast.
 //     Note that button's background color is decided by the user.
 .button.label-button { color: black; }
+.button.button-add-small {
+    @extend .is-small;
+    @extend .is-info;
+}
+.button.button-back {
+    @extend .is-link;
+}
+.button.button-delete {
+    @extend .is-danger;
+}
+.button.button-update {
+    @extend .is-primary;
+}
 .tag.label-tag { color: black; }

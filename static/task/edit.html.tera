@@ -56,20 +56,20 @@
 
                 <div class="field">
                     <div class="control">
-                        <button class="button is-primary is-light" type="submit">Update</button>
+                        <button class="button button-update is-light" type="submit">Update</button>
                     </div>
                 </div>
             </form>
         </div>
 
         <div class="container">
-            <button class="button is-danger is-light" onclick="location.href='{{ task.id }}/confirm'">Delete this task</button>
+            <button class="button button-delete is-light" onclick="location.href='{{ task.id }}/confirm'">Delete this task</button>
         </div>
     </section>
 
     <section class="section">
         <div class="container">
-            <button class="button is-link is-light" onclick="location.href='../'">Back to index page</button>
+            <button class="button button-back is-light" onclick="location.href='../'">Back to index page</button>
         </div>
     </section>
 {% endblock content %}

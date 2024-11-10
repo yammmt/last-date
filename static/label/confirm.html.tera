@@ -16,15 +16,15 @@
         <div class="container">
             <form class="inline" action="/label/{{ label.id }}" method="post">
                 <input type="hidden" name="_method" value="delete" />
-                <button class="button is-danger is-light" type="submit">Delete</button>
+                <button class="button button-delete is-light" type="submit">Delete</button>
             </form>
         </div>
     </section>
 
     <section class="section">
         <div class="container">
-            <button class="button is-link is-light" onclick="location.href='./edit'">Back to label</button>
-            <button class="button is-link is-light" onclick="location.href='/'">Back to index page</button>
+            <button class="button button-back is-light" onclick="location.href='./edit'">Back to label</button>
+            <button class="button button-back is-light" onclick="location.href='/'">Back to index page</button>
         </div>
     </section>
 {% endblock content %}

@@ -17,7 +17,7 @@
             <form class="inline" action="/" method="post">
                 <input type="text" placeholder="new task name?"
                     name="name" id="name" value="" autofocus>
-                <button class="button is-small is-info is-light" type="submit">add</button>
+                <button class="button button-add-small is-info is-light" type="submit">add</button>
             </form>
 
             <table class="table">
@@ -35,7 +35,7 @@
                                 {% if task.label_id %}
                                 {% for label in labels %}
                                 {% if label.id == task.label_id %}
-                                <button class="button is-outlined label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
+                                <button class="button label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
                                     {{ label.name }}
                                 </button>
                                 {% break %}
@@ -50,7 +50,7 @@
                             <td>
                                 <form class="inline" action="{{ task.id }}/date" method="post">
                                     <input type="hidden" name="_method" value="post" />
-                                    <button class="button is-primary is-light" type="submit">I did it today!</button>
+                                    <button class="button button-update is-light" type="submit">I did it today!</button>
                                 </form>
                             </td>
                         </tr>
