@@ -47,10 +47,12 @@ fn index_page() {
 
         // Ensure index shows correct task table.
         let body = res.into_string().await.unwrap();
-        assert!(body.contains("Label"));
-        assert!(body.contains("name"));
-        assert!(body.contains("Last updated"));
-        assert!(body.contains("Update to today"));
+        // Ensure table label headers.
+        // TODO: test for <th>Label</th> doesn't work because it has a link.
+        assert!(body.contains("Label"), "Task table header 'Label' could be missing");
+        assert!(body.contains("<th>name</th>"), "Task table header 'name' missing");
+        assert!(body.contains("<th>Last updated</th>"), "Task table header 'Last updated' missing");
+        assert!(body.contains("<th>Update to today</th>"), "'Update to today' button missing");
         // TODO: Ensure the number of table row reflects the number of tasks.
     })
 }
@@ -68,9 +70,9 @@ fn label_list_page() {
 
         // Ensure we can access label list page
         let res = client.get("/label").dispatch().await;
-        assert_eq!(res.status(), Status::Ok);
+        assert_eq!(res.status(), Status::Ok, "Label list page returned non-200 status");
         let body = res.into_string().await.unwrap();
-        assert!(!body.contains(&name));
+        assert!(!body.contains(&name), "Label name '{}' unexpectedly found in label list page", name);
 
         // Ensure created label is shown in label list page
         client
@@ -81,9 +83,9 @@ fn label_list_page() {
             .await;
 
         let res = client.get("/label").dispatch().await;
-        assert_eq!(res.status(), Status::Ok);
+        assert_eq!(res.status(), Status::Ok, "Label list page returned non-200 status after label creation");
         let body = res.into_string().await.unwrap();
-        assert!(body.contains(&name));
+        assert!(body.contains(&name), "Label name '{}' not found in label list page after creation", name);
     })
 }
 
@@ -102,17 +104,17 @@ fn detail_page() {
 
         // Ensure we can access detail page.
         let res = client.get(format!("/{}", inserted_id)).dispatch().await;
-        assert_eq!(res.status(), Status::Ok);
+        assert_eq!(res.status(), Status::Ok, "Detail page returned non-200 status");
 
         // Ensure detail page shows required fields.
         let body = res.into_string().await.unwrap();
-        assert!(body.contains("Label"));
-        assert!(body.contains("Task name"));
-        assert!(body.contains("Description"));
-        assert!(body.contains("Last updated"));
+        assert!(body.contains("Label"), "Detail page missing 'Label' field");
+        assert!(body.contains("Task name"), "Detail page missing 'Task name' field");
+        assert!(body.contains("Description"), "Detail page missing 'Description' field");
+        assert!(body.contains("Last updated"), "Detail page missing 'Last updated' field");
         // dirty sentence: a part of the HTML button string
-        assert!(body.contains(r#"type="submit">Update</button>"#));
-        assert!(body.contains(r#"onclick="location.href='../'"#));
+        assert!(body.contains(r#"type="submit">Update</button>"#), "Detail page missing 'Update' button");
+        assert!(body.contains(r#"onclick="location.href='../'"#), "Detail page missing 'Back to task list' link");
     })
 }
 
