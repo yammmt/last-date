@@ -1,7 +1,3 @@
-// If we run tests, current all DB contents will be deleted.
-// If you won't, please set environment variable for example:
-// `export ROCKET_DATABASES='{sqlite_database={url="db/mydb.sqlite"}}'`
-
 use super::models::label::Label;
 use super::models::task::Task;
 
@@ -9,6 +5,7 @@ use parking_lot::{const_mutex, Mutex};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
+use dotenv;
 use rocket::http::{ContentType, Status};
 use rocket::local::asynchronous::Client;
 
@@ -17,6 +14,9 @@ static DB_LOCK: Mutex<()> = const_mutex(());
 macro_rules! run_test {
     (|$client:ident, $conn:ident| $block:expr) => {{
         let _lock = DB_LOCK.lock();
+
+        // Load environment variables from .env.test
+        dotenv::from_filename(".env.test").ok();
 
         rocket::async_test(async move {
             let $client = Client::tracked(super::rocket())
