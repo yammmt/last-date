@@ -50,7 +50,7 @@ fn index_page() {
         // Ensure table label headers.
         // TODO: test for <th>Label</th> doesn't work because it has a link.
         assert!(body.contains("Label"), "Task table header 'Label' could be missing");
-        assert!(body.contains("<th>name</th>"), "Task table header 'name' missing");
+        assert!(body.contains("<th>Name</th>"), "Task table header 'Name' missing");
         assert!(body.contains("<th>Last updated</th>"), "Task table header 'Last updated' missing");
         assert!(body.contains("<th>Update to today</th>"), "'Update to today' button missing");
         // TODO: Ensure the number of table row reflects the number of tasks.
