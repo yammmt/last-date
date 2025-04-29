@@ -39,7 +39,7 @@ macro_rules! run_test {
 }
 
 #[test]
-fn index_page() {
+fn index_shows_main_task_table_headers_and_buttons() {
     run_test!(|client, _conn| {
         // Ensure we can access index page
         let res = client.get("/").dispatch().await;
@@ -70,7 +70,7 @@ fn index_page() {
 }
 
 #[test]
-fn label_list_page() {
+fn label_list_displays_created_labels() {
     run_test!(|client, conn| {
         // TODO: use rand for hex color code, too
         let mut rng = thread_rng();
@@ -118,7 +118,7 @@ fn label_list_page() {
 }
 
 #[test]
-fn detail_page() {
+fn task_detail_page_displays_fields_and_buttons() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "detailpagetest".to_string();
@@ -166,7 +166,7 @@ fn detail_page() {
 }
 
 #[test]
-fn tasks_by_label_page() {
+fn tasks_filtered_by_label_are_displayed_correctly() {
     let mut rng = thread_rng();
     run_test!(|client, conn| {
         // Create new tasks
@@ -228,7 +228,7 @@ fn tasks_by_label_page() {
 }
 
 #[test]
-fn confirm_page() {
+fn task_delete_confirm_page_shows_buttons() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "confirmpagetest".to_string();
@@ -257,7 +257,7 @@ fn confirm_page() {
 }
 
 #[test]
-fn label_confirm_page() {
+fn label_delete_confirm_page_shows_buttons() {
     run_test!(|client, conn| {
         // Create a new label.
         client
@@ -284,7 +284,7 @@ fn label_confirm_page() {
 }
 
 #[test]
-fn test_insertion_deletion() {
+fn task_insertion_and_deletion_updates_db_and_ui() {
     run_test!(|client, conn| {
         // Get the tasks before making changes.
         let init_tasks = Task::all(&conn).await;
@@ -328,7 +328,7 @@ fn test_insertion_deletion() {
 }
 
 #[test]
-fn test_label_insertion_deletion() {
+fn label_insertion_and_deletion_updates_db_and_ui() {
     run_test!(|client, conn| {
         // Get the labels before making changes.
         let init_labels = Label::all(&conn).await;
@@ -363,7 +363,7 @@ fn test_label_insertion_deletion() {
 }
 
 #[test]
-fn test_many_insertions() {
+fn inserting_many_tasks_displays_all_in_ui() {
     const ITER: usize = 100;
 
     let mut rng = thread_rng();
@@ -401,7 +401,7 @@ fn test_many_insertions() {
 }
 
 #[test]
-fn test_bad_new_task_form_submissions() {
+fn invalid_task_form_submission_shows_warnings() {
     run_test!(|client, _conn| {
         // Submit an **empty** form. This is an unexpected pattern
         // because task form in index page has `name` field.
@@ -434,7 +434,7 @@ fn test_bad_new_task_form_submissions() {
 }
 
 #[test]
-fn test_bad_new_label_form_submissions() {
+fn invalid_label_form_submission_shows_warnings() {
     run_test!(|client, _conn| {
         // Submit an **empty** form. This is an unexpected pattern
         // because label form in index page has `name` and `color` field.
@@ -538,7 +538,7 @@ fn test_bad_new_label_form_submissions() {
 }
 
 #[test]
-fn test_bad_update_form_submissions() {
+fn invalid_task_update_form_submission_shows_warnings() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "detailformtest".to_string();
@@ -591,7 +591,7 @@ fn test_bad_update_form_submissions() {
 }
 
 #[test]
-fn test_update_date() {
+fn updating_task_date_sets_to_today() {
     run_test!(|client, conn| {
         // Create new task with old `updated_at`.
         let mut rng = thread_rng();
@@ -628,7 +628,7 @@ fn test_update_date() {
 }
 
 #[test]
-fn test_update_task() {
+fn updating_task_fields_persists_changes() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name = "updatetasktest".to_string();
@@ -691,7 +691,7 @@ fn test_update_task() {
 }
 
 #[test]
-fn test_update_label() {
+fn updating_label_fields_persists_changes() {
     run_test!(|client, conn| {
         // Create a new label.
         client
