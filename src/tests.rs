@@ -69,7 +69,7 @@ fn index_shows_main_task_table_headers_and_buttons() {
         );
         assert!(
             headers.iter().any(|h| h == "Update to today"),
-            "'Update to today' button missing"
+            "Task table header 'Update to today' missing"
         );
         // TODO: Ensure the number of table row reflects the number of tasks.
     })
