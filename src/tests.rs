@@ -100,6 +100,13 @@ fn index_shows_update_to_today_button() {
     })
 }
 
+async fn label_exists(document: &Html, name: &str) -> bool {
+    let selector = Selector::parse("td,li,span").unwrap();
+    document
+        .select(&selector)
+        .any(|el| el.text().any(|t| t.trim() == name))
+}
+
 #[test]
 fn label_list_displays_created_labels() {
     run_test!(|client, conn| {
@@ -121,12 +128,8 @@ fn label_list_displays_created_labels() {
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
         // Check that label name is NOT present before creation
-        let label_selector = Selector::parse("td,li,span").unwrap();
-        let label_found = document
-            .select(&label_selector)
-            .any(|el| el.text().any(|t| t.trim() == name));
         assert!(
-            !label_found,
+            !label_exists(&document, &name).await,
             "Label name '{}' unexpectedly found in label list page",
             name
         );
@@ -148,12 +151,8 @@ fn label_list_displays_created_labels() {
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
         // Check that label name IS present after creation
-        let label_selector = Selector::parse("td,li,span").unwrap();
-        let label_found = document
-            .select(&label_selector)
-            .any(|el| el.text().any(|t| t.trim() == name));
         assert!(
-            label_found,
+            label_exists(&document, &name).await,
             "Label name '{}' not found in label list page after creation",
             name
         );
