@@ -2,7 +2,7 @@ use super::models::label::Label;
 use super::models::task::Task;
 
 use parking_lot::{const_mutex, Mutex};
-use rand::distr::Alphanumeric;
+use rand::distr::{Alphanumeric, SampleString};
 use rand::Rng;
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
@@ -113,11 +113,7 @@ fn label_list_displays_created_labels() {
     run_test!(|client, conn| {
         // TODO: use rand for hex color code, too
         let mut rng = rand::rng();
-        let name: String = (&mut rng)
-            .sample_iter(&Alphanumeric)
-            .map(char::from)
-            .take(6)
-            .collect();
+        let name: String = Alphanumeric.sample_string(&mut rng, 6);
 
         // Ensure we can access label list page
         let res = client.get("/label").dispatch().await;
@@ -274,11 +270,7 @@ fn tasks_filtered_by_label_are_displayed_correctly() {
         let mut task_names: Vec<String> = Vec::with_capacity(3);
         let mut task_ids: Vec<i32> = Vec::with_capacity(3);
         for _ in 0..3 {
-            let rng_name: String = (&mut rng)
-                .sample_iter(&Alphanumeric)
-                .map(char::from)
-                .take(7)
-                .collect();
+            let rng_name: String = Alphanumeric.sample_string(&mut rng, 7);
             client
                 .post("/")
                 .header(ContentType::Form)
@@ -605,11 +597,7 @@ fn inserting_many_tasks_displays_all_in_ui() {
 
         for i in 0..ITER {
             // Insert new task with random name.
-            let desc: String = (&mut rng)
-                .sample_iter(&Alphanumeric)
-                .map(char::from)
-                .take(6)
-                .collect();
+            let desc: String = Alphanumeric.sample_string(&mut rng, 6);
 
             client
                 .post("/")
@@ -827,11 +815,7 @@ fn updating_task_date_sets_to_today() {
     run_test!(|client, conn| {
         // Create new task with old `updated_at`.
         let mut rng = rand::rng();
-        let rng_name: String = (&mut rng)
-            .sample_iter(&Alphanumeric)
-            .map(char::from)
-            .take(7)
-            .collect();
+        let rng_name: String = Alphanumeric.sample_string(&mut rng, 7);
 
         let t = Task::insert_with_old_date(&rng_name, &conn).await;
         assert!(t);
