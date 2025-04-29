@@ -40,13 +40,13 @@ macro_rules! run_test {
 }
 
 #[test]
-fn index_shows_main_task_table_headers_and_buttons() {
+fn index_shows_main_task_table_headers() {
     run_test!(|client, _conn| {
         // Ensure we can access index page
         let res = client.get("/").dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
-        // Ensure index shows correct task table.
+        // Ensure index shows correct task table headers.
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
         let header_selector = Selector::parse("th").unwrap();
@@ -54,7 +54,6 @@ fn index_shows_main_task_table_headers_and_buttons() {
             .select(&header_selector)
             .map(|el| el.text().collect::<String>().trim().to_string())
             .collect();
-        // Check for each expected header
         assert!(
             headers.iter().any(|h| h.contains("Label")),
             "Task table header 'Label' could be missing"
@@ -71,7 +70,33 @@ fn index_shows_main_task_table_headers_and_buttons() {
             headers.iter().any(|h| h == "Update to today"),
             "Task table header 'Update to today' missing"
         );
-        // TODO: Ensure the number of table row reflects the number of tasks.
+    })
+}
+
+#[test]
+fn index_shows_update_to_today_button() {
+    run_test!(|client, _conn| {
+        // Insert a new task so the button appears
+        client
+            .post("/")
+            .header(ContentType::Form)
+            .body("name=test+task")
+            .dispatch()
+            .await;
+
+        // Ensure we can access index page
+        let res = client.get("/").dispatch().await;
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure the 'I did it today!' button is present in the table body
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
+        let button_selector = Selector::parse("button, a").unwrap();
+        let button_name = "I did it today!";
+        let found = document
+            .select(&button_selector)
+            .any(|el| el.text().any(|t| t.trim() == button_name));
+        assert!(found, "'{}' button not found in the table", button_name);
     })
 }
 
@@ -136,7 +161,7 @@ fn label_list_displays_created_and_absent_labels() {
 }
 
 #[test]
-fn task_detail_page_displays_fields_and_buttons() {
+fn task_detail_page_shows_required_fields() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "detailpagetest".to_string();
@@ -158,8 +183,6 @@ fn task_detail_page_displays_fields_and_buttons() {
 
         // Ensure detail page shows required fields using HTML parser.
         let body = res.into_string().await.unwrap();
-        let document = Html::parse_document(&body);
-        // Check for field labels
         let label_texts = ["Label", "Task name", "Description", "Last updated"];
         for expected in &label_texts {
             assert!(
@@ -168,7 +191,33 @@ fn task_detail_page_displays_fields_and_buttons() {
                 expected
             );
         }
-        // Check for Update button
+    })
+}
+
+#[test]
+fn task_detail_page_shows_update_button() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "detailpagetest".to_string();
+        client
+            .post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+
+        // Ensure we can access detail page.
+        let res = client.get(format!("/{}", inserted_id)).dispatch().await;
+        assert_eq!(
+            res.status(),
+            Status::Ok,
+            "Detail page returned non-200 status"
+        );
+
+        // Ensure detail page shows Update button.
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
         let update_button = document
             .select(&Selector::parse("button[type='submit']").unwrap())
             .find(|el| el.text().any(|t| t.contains("Update")));
@@ -176,7 +225,33 @@ fn task_detail_page_displays_fields_and_buttons() {
             update_button.is_some(),
             "Detail page missing 'Update' button"
         );
-        // Check for Back button or link
+    })
+}
+
+#[test]
+fn task_detail_page_shows_back_button() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "detailpagetest".to_string();
+        client
+            .post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+
+        // Ensure we can access detail page.
+        let res = client.get(format!("/{}", inserted_id)).dispatch().await;
+        assert_eq!(
+            res.status(),
+            Status::Ok,
+            "Detail page returned non-200 status"
+        );
+
+        // Ensure detail page shows Back button or link.
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
         let back_button = document
             .select(&Selector::parse("button[onclick],a[onclick]").unwrap())
             .find(|el| {
@@ -254,7 +329,7 @@ fn tasks_filtered_by_label_are_displayed_correctly() {
 }
 
 #[test]
-fn task_delete_confirm_page_shows_buttons() {
+fn task_delete_confirm_page_shows_delete_button() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "confirmpagetest".to_string();
@@ -266,31 +341,77 @@ fn task_delete_confirm_page_shows_buttons() {
             .await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
-        // Ensure we can access detail page.
+        // Ensure we can access confirm page.
         let res = client
             .get(format!("/{}/confirm", inserted_id))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
 
-        // Ensure confirm page shows buttons using HTML parser
+        // Ensure confirm page shows Delete button using HTML parser
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
-
-        // Check for Delete button
         let button_selector = Selector::parse("button[type='submit']").unwrap();
         let delete_button = document
             .select(&button_selector)
             .find(|el| el.text().any(|t| t.contains("Delete")));
         assert!(delete_button.is_some(), "Delete button not found!");
+    })
+}
 
-        // Check for Back to task button
+#[test]
+fn task_delete_confirm_page_shows_back_to_task_button() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "confirmpagetest".to_string();
+        client
+            .post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+
+        // Ensure we can access confirm page.
+        let res = client
+            .get(format!("/{}/confirm", inserted_id))
+            .dispatch()
+            .await;
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure confirm page shows Back to task button using HTML parser
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
         let back_button = document
             .select(&Selector::parse("button").unwrap())
             .find(|el| el.text().any(|t| t.contains("Back to task")));
         assert!(back_button.is_some(), "Back to task button not found!");
+    })
+}
 
-        // Check for onclick attribute for back navigation
+#[test]
+fn task_delete_confirm_page_shows_back_to_index_button() {
+    run_test!(|client, conn| {
+        // Create new task and get its ID.
+        let task_name: String = "confirmpagetest".to_string();
+        client
+            .post("/")
+            .header(ContentType::Form)
+            .body(format!("name={}", task_name))
+            .dispatch()
+            .await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+
+        // Ensure we can access confirm page.
+        let res = client
+            .get(format!("/{}/confirm", inserted_id))
+            .dispatch()
+            .await;
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure Back button has onclick to root page ('/')
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
         let has_onclick = document
             .select(&Selector::parse("button[onclick]").unwrap())
             .any(|el| {
@@ -303,7 +424,7 @@ fn task_delete_confirm_page_shows_buttons() {
 }
 
 #[test]
-fn label_delete_confirm_page_shows_buttons() {
+fn label_delete_confirm_page_shows_delete_button() {
     run_test!(|client, conn| {
         // Create a new label.
         client
@@ -321,24 +442,68 @@ fn label_delete_confirm_page_shows_buttons() {
             .await;
         assert_eq!(res.status(), Status::Ok);
 
-        // Ensure confirm page shows buttons using HTML parser
+        // Ensure confirm page shows Delete button using HTML parser
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
-
-        // Check for Delete button
         let button_selector = Selector::parse("button[type='submit']").unwrap();
         let delete_button = document
             .select(&button_selector)
             .find(|el| el.text().any(|t| t.contains("Delete")));
         assert!(delete_button.is_some(), "Delete button not found!");
+    })
+}
 
-        // Check for Back to label button
+#[test]
+fn label_delete_confirm_page_shows_back_to_label_button() {
+    run_test!(|client, conn| {
+        // Create a new label.
+        client
+            .post("/label")
+            .header(ContentType::Form)
+            .body("name=label+confirm+test&color=#ababab")
+            .dispatch()
+            .await;
+        let inserted_id = Label::all(&conn).await[0].id.unwrap();
+
+        // Ensure we can access confirm page.
+        let res = client
+            .get(format!("/label/{}/confirm", inserted_id))
+            .dispatch()
+            .await;
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure confirm page shows Back to label button using HTML parser
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
         let back_button = document
             .select(&Selector::parse("button").unwrap())
             .find(|el| el.text().any(|t| t.contains("Back to label")));
         assert!(back_button.is_some(), "Back to label button not found!");
+    })
+}
 
-        // Check for onclick attribute for back navigation
+#[test]
+fn label_delete_confirm_page_shows_back_to_index_button() {
+    run_test!(|client, conn| {
+        // Create a new label.
+        client
+            .post("/label")
+            .header(ContentType::Form)
+            .body("name=label+confirm+test&color=#ababab")
+            .dispatch()
+            .await;
+        let inserted_id = Label::all(&conn).await[0].id.unwrap();
+
+        // Ensure we can access confirm page.
+        let res = client
+            .get(format!("/label/{}/confirm", inserted_id))
+            .dispatch()
+            .await;
+        assert_eq!(res.status(), Status::Ok);
+
+        // Ensure Back button has onclick to root page ('/')
+        let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
         let has_onclick = document
             .select(&Selector::parse("button[onclick]").unwrap())
             .any(|el| {
