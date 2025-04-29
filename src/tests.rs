@@ -8,6 +8,7 @@ use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use dotenv;
 use rocket::http::{ContentType, Status};
 use rocket::local::asynchronous::Client;
+use scraper::{Html, Selector};
 
 static DB_LOCK: Mutex<()> = const_mutex(());
 
@@ -47,22 +48,27 @@ fn index_shows_main_task_table_headers_and_buttons() {
 
         // Ensure index shows correct task table.
         let body = res.into_string().await.unwrap();
-        // Ensure table label headers.
-        // TODO: test for <th>Label</th> doesn't work because it has a link.
+        let document = Html::parse_document(&body);
+        let header_selector = Selector::parse("th").unwrap();
+        let headers: Vec<String> = document
+            .select(&header_selector)
+            .map(|el| el.text().collect::<String>().trim().to_string())
+            .collect();
+        // Check for each expected header
         assert!(
-            body.contains("Label"),
+            headers.iter().any(|h| h.contains("Label")),
             "Task table header 'Label' could be missing"
         );
         assert!(
-            body.contains("<th>Name</th>"),
+            headers.iter().any(|h| h == "Name"),
             "Task table header 'Name' missing"
         );
         assert!(
-            body.contains("<th>Last updated</th>"),
+            headers.iter().any(|h| h == "Last updated"),
             "Task table header 'Last updated' missing"
         );
         assert!(
-            body.contains("<th>Update to today</th>"),
+            headers.iter().any(|h| h == "Update to today"),
             "'Update to today' button missing"
         );
         // TODO: Ensure the number of table row reflects the number of tasks.
@@ -88,8 +94,14 @@ fn label_list_displays_created_and_absent_labels() {
             "Label list page returned non-200 status"
         );
         let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
+        // Check that label name is NOT present before creation
+        let label_selector = Selector::parse("td,li,span").unwrap();
+        let label_found = document
+            .select(&label_selector)
+            .any(|el| el.text().any(|t| t.trim() == name));
         assert!(
-            !body.contains(&name),
+            !label_found,
             "Label name '{}' unexpectedly found in label list page",
             name
         );
@@ -109,8 +121,14 @@ fn label_list_displays_created_and_absent_labels() {
             "Label list page returned non-200 status after label creation"
         );
         let body = res.into_string().await.unwrap();
+        let document = Html::parse_document(&body);
+        // Check that label name IS present after creation
+        let label_selector = Selector::parse("td,li,span").unwrap();
+        let label_found = document
+            .select(&label_selector)
+            .any(|el| el.text().any(|t| t.trim() == name));
         assert!(
-            body.contains(&name),
+            label_found,
             "Label name '{}' not found in label list page after creation",
             name
         );
@@ -138,29 +156,37 @@ fn task_detail_page_displays_fields_and_buttons() {
             "Detail page returned non-200 status"
         );
 
-        // Ensure detail page shows required fields.
+        // Ensure detail page shows required fields using HTML parser.
         let body = res.into_string().await.unwrap();
-        assert!(body.contains("Label"), "Detail page missing 'Label' field");
+        let document = Html::parse_document(&body);
+        // Check for field labels
+        let label_texts = ["Label", "Task name", "Description", "Last updated"];
+        for expected in &label_texts {
+            assert!(
+                body.contains(expected),
+                "Detail page missing '{}' field",
+                expected
+            );
+        }
+        // Check for Update button
+        let update_button = document
+            .select(&Selector::parse("button[type='submit']").unwrap())
+            .find(|el| el.text().any(|t| t.contains("Update")));
         assert!(
-            body.contains("Task name"),
-            "Detail page missing 'Task name' field"
-        );
-        assert!(
-            body.contains("Description"),
-            "Detail page missing 'Description' field"
-        );
-        assert!(
-            body.contains("Last updated"),
-            "Detail page missing 'Last updated' field"
-        );
-        // dirty sentence: a part of the HTML button string
-        assert!(
-            body.contains(r#"type="submit">Update</button>"#),
+            update_button.is_some(),
             "Detail page missing 'Update' button"
         );
+        // Check for Back button or link
+        let back_button = document
+            .select(&Selector::parse("button[onclick],a[onclick]").unwrap())
+            .find(|el| {
+                el.value()
+                    .attr("onclick")
+                    .map_or(false, |v| v.contains("location.href='../'"))
+            });
         assert!(
-            body.contains(r#"onclick="location.href='../'"#),
-            "Detail page missing 'Back to task list' link"
+            back_button.is_some(),
+            "Detail page missing 'Back to task list' button or link"
         );
     })
 }
@@ -247,12 +273,32 @@ fn task_delete_confirm_page_shows_buttons() {
             .await;
         assert_eq!(res.status(), Status::Ok);
 
-        // Ensure confirm page shows buttons
+        // Ensure confirm page shows buttons using HTML parser
         let body = res.into_string().await.unwrap();
-        assert!(body.contains(r#"type="submit">Delete</button>"#));
-        // If I write full button HTML, `cargo test` hangs up. I don't know why.
-        assert!(body.contains("Back to task</button>"));
-        assert!(body.contains(r#"onclick="location.href='/'"#));
+        let document = Html::parse_document(&body);
+
+        // Check for Delete button
+        let button_selector = Selector::parse("button[type='submit']").unwrap();
+        let delete_button = document
+            .select(&button_selector)
+            .find(|el| el.text().any(|t| t.contains("Delete")));
+        assert!(delete_button.is_some(), "Delete button not found!");
+
+        // Check for Back to task button
+        let back_button = document
+            .select(&Selector::parse("button").unwrap())
+            .find(|el| el.text().any(|t| t.contains("Back to task")));
+        assert!(back_button.is_some(), "Back to task button not found!");
+
+        // Check for onclick attribute for back navigation
+        let has_onclick = document
+            .select(&Selector::parse("button[onclick]").unwrap())
+            .any(|el| {
+                el.value()
+                    .attr("onclick")
+                    .map_or(false, |v| v.contains("location.href='/'"))
+            });
+        assert!(has_onclick, "Back button with onclick to '/' not found!");
     })
 }
 
@@ -275,11 +321,32 @@ fn label_delete_confirm_page_shows_buttons() {
             .await;
         assert_eq!(res.status(), Status::Ok);
 
-        // Ensure confirm page shows buttons
+        // Ensure confirm page shows buttons using HTML parser
         let body = res.into_string().await.unwrap();
-        assert!(body.contains(r#"type="submit">Delete</button>"#));
-        assert!(body.contains("Back to label</button>"));
-        assert!(body.contains(r#"onclick="location.href='/'"#));
+        let document = Html::parse_document(&body);
+
+        // Check for Delete button
+        let button_selector = Selector::parse("button[type='submit']").unwrap();
+        let delete_button = document
+            .select(&button_selector)
+            .find(|el| el.text().any(|t| t.contains("Delete")));
+        assert!(delete_button.is_some(), "Delete button not found!");
+
+        // Check for Back to label button
+        let back_button = document
+            .select(&Selector::parse("button").unwrap())
+            .find(|el| el.text().any(|t| t.contains("Back to label")));
+        assert!(back_button.is_some(), "Back to label button not found!");
+
+        // Check for onclick attribute for back navigation
+        let has_onclick = document
+            .select(&Selector::parse("button[onclick]").unwrap())
+            .any(|el| {
+                el.value()
+                    .attr("onclick")
+                    .map_or(false, |v| v.contains("location.href='/'"))
+            });
+        assert!(has_onclick, "Back button with onclick to '/' not found!");
     })
 }
 
