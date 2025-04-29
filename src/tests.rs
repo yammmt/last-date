@@ -2,7 +2,8 @@ use super::models::label::Label;
 use super::models::task::Task;
 
 use parking_lot::{const_mutex, Mutex};
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rand::distr::Alphanumeric;
+use rand::Rng;
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use dotenv;
@@ -111,7 +112,7 @@ async fn label_exists(document: &Html, name: &str) -> bool {
 fn label_list_displays_created_labels() {
     run_test!(|client, conn| {
         // TODO: use rand for hex color code, too
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let name: String = (&mut rng)
             .sample_iter(&Alphanumeric)
             .map(char::from)
@@ -267,7 +268,7 @@ fn task_detail_page_shows_back_button() {
 
 #[test]
 fn tasks_filtered_by_label_are_displayed_correctly() {
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     run_test!(|client, conn| {
         // Create new tasks
         let mut task_names: Vec<String> = Vec::with_capacity(3);
@@ -597,7 +598,7 @@ fn label_insertion_and_deletion_updates_db_and_ui() {
 fn inserting_many_tasks_displays_all_in_ui() {
     const ITER: usize = 100;
 
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     run_test!(|client, conn| {
         let init_num = Task::all(&conn).await.len();
         let mut descs = Vec::new();
@@ -825,7 +826,7 @@ fn invalid_task_update_form_submission_shows_warnings() {
 fn updating_task_date_sets_to_today() {
     run_test!(|client, conn| {
         // Create new task with old `updated_at`.
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let rng_name: String = (&mut rng)
             .sample_iter(&Alphanumeric)
             .map(char::from)

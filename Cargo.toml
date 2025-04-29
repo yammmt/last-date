@@ -28,6 +28,6 @@ features = ["diesel_sqlite_pool"]
 
 [dev-dependencies]
 parking_lot = "^0.12"
-rand = "0.8.5"
+rand = "0.9.1"
 dotenv = "0.15"
 scraper = "0.18"
