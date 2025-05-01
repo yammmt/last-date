@@ -43,11 +43,12 @@ macro_rules! run_test {
 #[test]
 fn index_shows_main_task_table_headers() {
     run_test!(|client, _conn| {
-        // Ensure we can access index page
-        let res = client.get("/").dispatch().await;
-        assert_eq!(res.status(), Status::Ok);
+        // --- Arrange: (No setup needed) ---
 
-        // Ensure index shows correct task table headers.
+        // --- Act: Access index page ---
+        let res = client.get("/").dispatch().await;
+        // prerequisites for this test
+        assert_eq!(res.status(), Status::Ok);
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
         let header_selector = Selector::parse("th").unwrap();
@@ -55,6 +56,8 @@ fn index_shows_main_task_table_headers() {
             .select(&header_selector)
             .map(|el| el.text().collect::<String>().trim().to_string())
             .collect();
+
+        // --- Assert: Status and headers are correct ---
         assert!(
             headers.iter().any(|h| h.contains("Label")),
             "Task table header 'Label' could be missing"
@@ -77,21 +80,21 @@ fn index_shows_main_task_table_headers() {
 #[test]
 fn index_shows_update_to_today_button() {
     run_test!(|client, _conn| {
-        // Insert a new task so the button appears
+        // --- Arrange: Insert a new task and check index page is accessible ---
         client
             .post("/")
             .header(ContentType::Form)
             .body("name=test+task")
             .dispatch()
             .await;
-
-        // Ensure we can access index page
         let res = client.get("/").dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
-        // Ensure the 'I did it today!' button is present in the table body
+        // --- Act: Extract body and parse document ---
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
+
+        // --- Assert: The 'I did it today!' button is present in the table body ---
         let button_selector = Selector::parse("button, a").unwrap();
         let button_name = "I did it today!";
         let found = document
@@ -115,7 +118,7 @@ fn label_list_displays_created_labels() {
         let mut rng = rand::rng();
         let name: String = Alphanumeric.sample_string(&mut rng, 6);
 
-        // Ensure we can access label list page
+        // --- Arrange: Ensure label is absent ---
         let res = client.get("/label").dispatch().await;
         assert_eq!(
             res.status(),
@@ -124,14 +127,14 @@ fn label_list_displays_created_labels() {
         );
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
-        // Check that label name is NOT present before creation
+        // Assert that label name is NOT present before creation
         assert!(
             !label_exists(&document, &name).await,
             "Label name '{}' unexpectedly found in label list page",
             name
         );
 
-        // Ensure created label is shown in label list page
+        // --- Act: Create the label ---
         client
             .post("/label")
             .header(ContentType::Form)
@@ -139,6 +142,7 @@ fn label_list_displays_created_labels() {
             .dispatch()
             .await;
 
+        // --- Assert: Label is present ---
         let res = client.get("/label").dispatch().await;
         assert_eq!(
             res.status(),
@@ -147,7 +151,7 @@ fn label_list_displays_created_labels() {
         );
         let body = res.into_string().await.unwrap();
         let document = Html::parse_document(&body);
-        // Check that label name IS present after creation
+        // Assert that label name IS present after creation
         assert!(
             label_exists(&document, &name).await,
             "Label name '{}' not found in label list page after creation",
@@ -510,10 +514,10 @@ fn label_delete_confirm_page_shows_back_to_index_button() {
 #[test]
 fn task_insertion_and_deletion_updates_db_and_ui() {
     run_test!(|client, conn| {
-        // Get the tasks before making changes.
+        // --- Arrange: Get initial tasks ---
         let init_tasks = Task::all(&conn).await;
 
-        // insert new task
+        // --- Act: Insert new task ---
         client
             .post("/")
             .header(ContentType::Form)
@@ -522,14 +526,11 @@ fn task_insertion_and_deletion_updates_db_and_ui() {
             .await;
         let time_posted_ndt = Local::now().naive_local();
 
-        // Ensure we have one more task in the DB.
+        // --- Assert: Task inserted in DB ---
         let new_tasks = Task::all(&conn).await;
         assert_eq!(new_tasks.len(), init_tasks.len() + 1);
-
-        // Ensure the task is what we expect.
         assert_eq!(new_tasks[0].name, "test task");
         assert_eq!(new_tasks[0].description, "");
-
         assert!(
             time_posted_ndt
                 - NaiveDateTime::parse_from_str(&new_tasks[0].updated_at, "%Y-%m-%d %H:%M:%S%.f")
@@ -538,11 +539,11 @@ fn task_insertion_and_deletion_updates_db_and_ui() {
         );
         assert_eq!(new_tasks[0].label_id, None);
 
-        // Delete task.
+        // --- Act: Delete the task ---
         let id = new_tasks[0].id.unwrap();
         client.delete(format!("/{}", id)).dispatch().await;
 
-        // Ensure task was deleted.
+        // --- Assert: Task deleted from DB ---
         let final_tasks = Task::all(&conn).await;
         assert_eq!(final_tasks.len(), init_tasks.len());
         if !final_tasks.is_empty() {
@@ -554,10 +555,10 @@ fn task_insertion_and_deletion_updates_db_and_ui() {
 #[test]
 fn label_insertion_and_deletion_updates_db_and_ui() {
     run_test!(|client, conn| {
-        // Get the labels before making changes.
+        // --- Arrange: Get initial labels ---
         let init_labels = Label::all(&conn).await;
 
-        // Insert new label.
+        // --- Act: Insert new label ---
         client
             .post("/label")
             .header(ContentType::Form)
@@ -565,19 +566,17 @@ fn label_insertion_and_deletion_updates_db_and_ui() {
             .dispatch()
             .await;
 
-        // Ensure we have one more label in the DB.
+        // --- Assert: Label inserted in DB ---
         let new_labels = Label::all(&conn).await;
         assert_eq!(new_labels.len(), init_labels.len() + 1);
-
-        // Ensure the label is what we expect.
         assert_eq!(new_labels[0].name, "test label");
         assert_eq!(new_labels[0].color_hex, "#ababab");
 
-        // Delete a label.
+        // --- Act: Delete the label ---
         let id = new_labels[0].id.unwrap();
         client.delete(format!("/label/{}", id)).dispatch().await;
 
-        // Ensure label was deleted.
+        // --- Assert: Label deleted from DB ---
         let final_labels = Label::all(&conn).await;
         assert_eq!(final_labels.len(), init_labels.len());
         if !final_labels.is_empty() {
@@ -846,12 +845,11 @@ fn updating_task_date_sets_to_today() {
 #[test]
 fn updating_task_fields_persists_changes() {
     run_test!(|client, conn| {
-        // Create new task and get its ID.
+        // --- Arrange: Create new task and label ---
         let task_name = "updatetasktest".to_string();
         let t = Task::insert_with_old_date(&task_name, &conn).await;
         assert!(t);
 
-        // Create new label, too.
         client
             .post("/label")
             .header(ContentType::Form)
@@ -859,7 +857,7 @@ fn updating_task_fields_persists_changes() {
             .dispatch()
             .await;
 
-        // Submit valid update form.
+        // --- Act: Submit valid update form ---
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
         let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
         let task_description = "newdescription".to_string();
@@ -875,6 +873,7 @@ fn updating_task_fields_persists_changes() {
             .dispatch()
             .await;
 
+        // --- Assert: DB and UI reflect changes ---
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
@@ -909,7 +908,7 @@ fn updating_task_fields_persists_changes() {
 #[test]
 fn updating_label_fields_persists_changes() {
     run_test!(|client, conn| {
-        // Create a new label.
+        // --- Arrange: Create a new label ---
         client
             .post("/label")
             .header(ContentType::Form)
@@ -918,7 +917,7 @@ fn updating_label_fields_persists_changes() {
             .await;
         let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
-        // Update above label.
+        // --- Act: Update the label ---
         let new_name = "newnewlabel".to_string();
         let new_color = "#5566ff".to_string();
         let form_data = format!("name={}&color={}", &new_name, &new_color);
@@ -929,6 +928,7 @@ fn updating_label_fields_persists_changes() {
             .dispatch()
             .await;
 
+        // --- Assert: DB and UI reflect changes ---
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
