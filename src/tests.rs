@@ -3,10 +3,8 @@ use super::models::task::Task;
 
 use parking_lot::{const_mutex, Mutex};
 use rand::distr::{Alphanumeric, SampleString};
-use rand::Rng;
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
-use dotenv;
 use rocket::http::{ContentType, Status};
 use rocket::local::asynchronous::Client;
 use scraper::{Html, Selector};
@@ -257,7 +255,7 @@ fn task_detail_page_shows_back_button() {
             .find(|el| {
                 el.value()
                     .attr("onclick")
-                    .map_or(false, |v| v.contains("location.href='../'"))
+                    .is_some_and(|v| v.contains("location.href='../'"))
             });
         assert!(
             back_button.is_some(),
@@ -290,7 +288,7 @@ fn tasks_filtered_by_label_are_displayed_correctly() {
         client
             .post("/label")
             .header(ContentType::Form)
-            .body("name=newlabel&color=#eeeeee".to_string())
+            .body("name=newlabel&color=#eeeeee")
             .dispatch()
             .await;
         let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
@@ -413,7 +411,7 @@ fn task_delete_confirm_page_shows_back_to_index_button() {
             .any(|el| {
                 el.value()
                     .attr("onclick")
-                    .map_or(false, |v| v.contains("location.href='/'"))
+                    .is_some_and(|v| v.contains("location.href='/'"))
             });
         assert!(has_onclick, "Back button with onclick to '/' not found!");
     })
@@ -505,7 +503,7 @@ fn label_delete_confirm_page_shows_back_to_index_button() {
             .any(|el| {
                 el.value()
                     .attr("onclick")
-                    .map_or(false, |v| v.contains("location.href='/'"))
+                    .is_some_and(|v| v.contains("location.href='/'"))
             });
         assert!(has_onclick, "Back button with onclick to '/' not found!");
     })
@@ -853,7 +851,7 @@ fn updating_task_fields_persists_changes() {
         client
             .post("/label")
             .header(ContentType::Form)
-            .body("name=newlabel&color=#eeeeee".to_string())
+            .body("name=newlabel&color=#eeeeee")
             .dispatch()
             .await;
 
@@ -912,7 +910,7 @@ fn updating_label_fields_persists_changes() {
         client
             .post("/label")
             .header(ContentType::Form)
-            .body("name=newlabel&color=#eeeeee".to_string())
+            .body("name=newlabel&color=#eeeeee")
             .dispatch()
             .await;
         let inserted_id = Label::all(&conn).await[0].id.unwrap();
