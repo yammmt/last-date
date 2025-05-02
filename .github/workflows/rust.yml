@@ -52,3 +52,12 @@ jobs:
           components: rustfmt
       - name: rustfmt
         run: cargo fmt -- --check
+
+  clippy_check:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-Dwarnings"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features
