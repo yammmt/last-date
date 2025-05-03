@@ -59,13 +59,8 @@ impl Task {
     pub async fn all_by_id(conn: &DbConn) -> Vec<Task> {
         // I don't know why sometimes `all` called by `test_many_insertions`
         // invites SIGSEGV: invalid memory reference error...
-        conn.run(|c| {
-            tasks::table
-                .order(tasks::id.desc())
-                .load::<Task>(c)
-                .unwrap()
-        })
-        .await
+        conn.run(|c| tasks::table.order(tasks::id.asc()).load::<Task>(c).unwrap())
+            .await
     }
 
     pub async fn task_by_id(id: i32, conn: &DbConn) -> Task {

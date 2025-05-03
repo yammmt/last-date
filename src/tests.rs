@@ -550,30 +550,27 @@ fn label_insertion_and_deletion_updates_db_and_ui() {
 }
 
 #[test]
-fn inserting_many_tasks_displays_all_in_ui() {
-    const ITER: usize = 100;
+fn inserting_multiple_tasks_preserves_insertion_order() {
+    const TEST_RECORD_NUM: usize = 100;
 
-    let mut rng = rand::rng();
     run_test!(|client, conn| {
-        let init_num = Task::all(&conn).await.len();
-        let mut descs = Vec::new();
+        // --- Arrange: prepare variables for later assertions ---
+        let mut rng = rand::rng();
+        let mut inserted_names = Vec::new();
 
-        for i in 0..ITER {
-            // Insert new task with random name.
-            let desc: String = Alphanumeric.sample_string(&mut rng, 6);
+        // --- Act: Insert many tasks ---
+        for _ in 0..TEST_RECORD_NUM {
+            let name: String = Alphanumeric.sample_string(&mut rng, 6);
+            insert_task_by_post(&client, &name, "", "", None).await;
+            inserted_names.push(name);
+        }
+        let tasks = Task::all_by_id(&conn).await;
+        // all tasks inserted?
+        assert_eq!(tasks.len(), TEST_RECORD_NUM);
 
-            insert_task_by_post(&client, &desc, "", "", None).await;
-
-            // Record the name we choose for this iteration.
-            descs.insert(0, desc);
-
-            // Ensure the task was inserted properly and all other tasks remain.
-            let tasks = Task::all_by_id(&conn).await;
-            assert_eq!(tasks.len(), init_num + i + 1);
-
-            for j in 0..i {
-                assert_eq!(descs[j], tasks[j].name);
-            }
+        // --- Assert: inserted tasks are in the same order as inserted. ---
+        for i in 0..TEST_RECORD_NUM {
+            assert_eq!(tasks[i].name, inserted_names[i]);
         }
     })
 }
