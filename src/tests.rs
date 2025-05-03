@@ -628,13 +628,6 @@ fn invalid_task_form_submission_shows_warnings() {
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
 
-        // Submit a form without a name field. This is same as just above pattern.
-        let res = client.post("/").header(ContentType::Form).dispatch().await;
-
-        let mut cookies = res.headers().get("Set-Cookie");
-        assert_eq!(res.status(), Status::UnprocessableEntity);
-        assert!(!cookies.any(|value| value.contains("warning")));
-
         // Submit a form with an empty name. We look for `warning` in the
         // cookies which corresponds to flash message being set as a warning.
         let res = client
