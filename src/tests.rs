@@ -713,48 +713,89 @@ fn label_form_submission_with_invalid_color_format_shows_warnings() {
 }
 
 #[test]
-fn invalid_task_update_form_submission_shows_warnings() {
+fn task_update_form_submission_without_form_shows_warnings() {
     run_test!(|client, conn| {
-        // Create new task and get its ID.
-        let task_name: String = "detailformtest".to_string();
-        insert_task_by_post(&client, &task_name, "", "", None).await;
+        // Arrange: Insert a task and get its ID
+        let task_name = "detailformtest";
+        insert_task_by_post(&client, task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
         let post_url = format!("/{}", inserted_id);
 
-        // Submit POST request without a form. This is an unexpected pattern
-        // because task form in detail page has some fields.
+        // Act: POST with no form data
         let res = client
             .post(&post_url)
             .header(ContentType::Form)
             .dispatch()
             .await;
-
         let mut cookies = res.headers().get("Set-Cookie");
+
+        // Assert
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
 
-        // Submit a form without a name field.
+#[test]
+fn task_update_form_submission_without_name_shows_warnings() {
+    run_test!(|client, conn| {
+        let task_name = "detailformtest";
+        insert_task_by_post(&client, task_name, "", "", None).await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+        let post_url = format!("/{}", inserted_id);
+
+        // Act: POST without name field
         let res = client
             .post(&post_url)
             .header(ContentType::Form)
             .body("description=hello")
             .dispatch()
             .await;
-
         let mut cookies = res.headers().get("Set-Cookie");
+        // Assert
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
 
-        // Submit a form with an empty name. We look for `warning` in the
-        // cookies which corresponds to flash message being set as a warning.
+#[test]
+fn task_update_form_submission_without_description_shows_warnings() {
+    run_test!(|client, conn| {
+        let task_name = "detailformtest";
+        insert_task_by_post(&client, task_name, "", "", None).await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+        let post_url = format!("/{}", inserted_id);
+
+        // Act: POST without description field
+        let res = client
+            .post(&post_url)
+            .header(ContentType::Form)
+            .body("name=foo")
+            .dispatch()
+            .await;
+        let mut cookies = res.headers().get("Set-Cookie");
+        // Assert
+        assert_eq!(res.status(), Status::UnprocessableEntity);
+        assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
+
+#[test]
+fn task_update_form_submission_with_empty_name_shows_warnings() {
+    run_test!(|client, conn| {
+        let task_name = "detailformtest";
+        insert_task_by_post(&client, task_name, "", "", None).await;
+        let inserted_id = Task::all(&conn).await[0].id.unwrap();
+        let post_url = format!("/{}", inserted_id);
+
+        // Act: POST with empty name
         let res = client
             .post(&post_url)
             .header(ContentType::Form)
             .body("name=&description=hello&updated_at=2020-04-28")
             .dispatch()
             .await;
-
         let mut cookies = res.headers().get("Set-Cookie");
+        // Assert
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("warning")));
     })
