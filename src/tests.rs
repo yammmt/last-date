@@ -620,7 +620,7 @@ fn inserting_many_tasks_displays_all_in_ui() {
 #[test]
 fn invalid_task_form_submission_shows_warnings() {
     run_test!(|client, _conn| {
-        // Submit an **empty** form. This is an unexpected pattern
+        // Submit POST request without a form. This is an unexpected pattern
         // because task form in index page has `name` field.
         let res = client.post("/").header(ContentType::Form).dispatch().await;
 
@@ -653,7 +653,7 @@ fn invalid_task_form_submission_shows_warnings() {
 #[test]
 fn invalid_label_form_submission_shows_warnings() {
     run_test!(|client, _conn| {
-        // Submit an **empty** form. This is an unexpected pattern
+        // Submit POST request without a form. This is an unexpected pattern
         // because label form in index page has `name` and `color` field.
         let res = client
             .post("/label")
@@ -768,7 +768,7 @@ fn invalid_task_update_form_submission_shows_warnings() {
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
         let post_url = format!("/{}", inserted_id);
 
-        // Submit an **empty** form. This is an unexpected pattern
+        // Submit POST request without a form. This is an unexpected pattern
         // because task form in detail page has some fields.
         let res = client
             .post(&post_url)
@@ -780,7 +780,7 @@ fn invalid_task_update_form_submission_shows_warnings() {
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
 
-        // Submit a form without a name field. This is same as just above pattern.
+        // Submit a form without a name field.
         let res = client
             .post(&post_url)
             .header(ContentType::Form)
