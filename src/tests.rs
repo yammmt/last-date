@@ -576,7 +576,7 @@ fn inserting_multiple_tasks_preserves_insertion_order() {
 }
 
 #[test]
-fn invalid_task_form_submission_shows_warnings() {
+fn task_form_submission_without_form_shows_warnings() {
     run_test!(|client, _conn| {
         // Submit POST request without a form. This is an unexpected pattern
         // because task form in index page has `name` field.
@@ -585,9 +585,12 @@ fn invalid_task_form_submission_shows_warnings() {
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
 
-        // Submit a form with an empty name. We look for `warning` in the
-        // cookies which corresponds to flash message being set as a warning.
+#[test]
+fn task_form_submission_with_empty_fields_shows_warnings() {
+    run_test!(|client, _conn| {
         let res = insert_task_by_post(&client, "", "", "", None).await;
 
         let mut cookies = res.headers().get("Set-Cookie");
@@ -597,7 +600,18 @@ fn invalid_task_form_submission_shows_warnings() {
 }
 
 #[test]
-fn invalid_label_form_submission_shows_warnings() {
+fn task_form_submission_with_empty_name_shows_warnings() {
+    run_test!(|client, _conn| {
+        let res = insert_task_by_post(&client, "", "description", "", None).await;
+
+        let mut cookies = res.headers().get("Set-Cookie");
+        assert_eq!(res.status(), Status::SeeOther);
+        assert!(cookies.any(|value| value.contains("warning")));
+    })
+}
+
+#[test]
+fn label_form_submission_without_form_shows_warnings() {
     run_test!(|client, _conn| {
         // Submit POST request without a form. This is an unexpected pattern
         // because label form in index page has `name` and `color` field.
@@ -610,8 +624,12 @@ fn invalid_label_form_submission_shows_warnings() {
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
 
-        // Submit a form without a name field.
+#[test]
+fn label_form_submission_without_name_shows_warnings() {
+    run_test!(|client, _conn| {
         let res = client
             .post("/label")
             .header(ContentType::Form)
@@ -622,8 +640,12 @@ fn invalid_label_form_submission_shows_warnings() {
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
 
-        // Submit a form without a color field.
+#[test]
+fn label_form_submission_without_color_shows_warnings() {
+    run_test!(|client, _conn| {
         let res = client
             .post("/label")
             .header(ContentType::Form)
@@ -634,7 +656,12 @@ fn invalid_label_form_submission_shows_warnings() {
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::UnprocessableEntity);
         assert!(!cookies.any(|value| value.contains("warning")));
+    })
+}
 
+#[test]
+fn label_form_submission_with_empty_name_shows_warnings() {
+    run_test!(|client, _conn| {
         // Submit a form with an empty name. We look for `warning` in the
         // cookies which corresponds to flash message being set as a warning.
         let res = client
@@ -645,9 +672,15 @@ fn invalid_label_form_submission_shows_warnings() {
             .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
+        println!("{:?}", res);
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("warning")));
+    })
+}
 
+#[test]
+fn label_form_submission_with_empty_color_shows_warnings() {
+    run_test!(|client, _conn| {
         // Submit a form with an empty color. We look for `warning` in the
         // cookies which corresponds to flash message being set as a warning.
         let res = client
@@ -660,33 +693,22 @@ fn invalid_label_form_submission_shows_warnings() {
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("warning")));
+    })
+}
 
+#[test]
+fn label_form_submission_with_invalid_color_format_shows_warnings() {
+    run_test!(|client, _conn| {
         // Submit a form with an invalid color. We look for `warning` in the
         // cookies which corresponds to flash message being set as a warning.
-        let res = client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=mylabel&color=red")
-            .dispatch()
-            .await;
+        let invalid_colors = ["red", "#1234567", "#12345"];
 
-        let mut cookies = res.headers().get("Set-Cookie");
-        assert_eq!(res.status(), Status::SeeOther);
-        assert!(cookies.any(|value| value.contains("warning")));
-
-        // Submit a form with invalid color (color code has 7 digits).
-        insert_label_by_post(&client, "mylabel", "#1234567").await;
-
-        let mut cookies = res.headers().get("Set-Cookie");
-        assert_eq!(res.status(), Status::SeeOther);
-        assert!(cookies.any(|value| value.contains("warning")));
-
-        // Submit a form with invalid color (color code has 5 digits).
-        insert_label_by_post(&client, "mylabel", "#12345").await;
-
-        let mut cookies = res.headers().get("Set-Cookie");
-        assert_eq!(res.status(), Status::SeeOther);
-        assert!(cookies.any(|value| value.contains("warning")));
+        for c in invalid_colors {
+            let res = insert_label_by_post(&client, "mylabel", c).await;
+            let mut cookies = res.headers().get("Set-Cookie");
+            assert_eq!(res.status(), Status::SeeOther);
+            assert!(cookies.any(|value| value.contains("warning")));
+        }
     })
 }
 
