@@ -12,7 +12,7 @@ use scraper::{Html, Selector};
 static DB_LOCK: Mutex<()> = const_mutex(());
 
 macro_rules! run_test {
-    (|$client:ident, $conn:ident| $block:expr) => {{
+    (|$client:ident, $conn:ident| $block:expr_2021) => {{
         let _lock = DB_LOCK.lock();
 
         // Load environment variables from .env.test
