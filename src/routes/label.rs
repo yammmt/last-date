@@ -1,5 +1,5 @@
-use crate::models::label::{Label, LabelForm};
 use crate::DbConn;
+use crate::models::label::{Label, LabelForm};
 
 use regex::Regex;
 use rocket::form::Form;

@@ -16,8 +16,8 @@ mod schema {
 
 use self::schema::tasks;
 
-use crate::models::label::Label;
 use crate::DbConn;
+use crate::models::label::Label;
 
 #[derive(Associations, Identifiable, Serialize, Queryable, Insertable, Debug, Clone)]
 #[diesel(table_name = tasks)]

@@ -1,6 +1,6 @@
+use crate::DbConn;
 use crate::models::label::Label;
 use crate::models::task::{Task, TaskName, TaskUpdate};
-use crate::DbConn;
 
 use rocket::form::Form;
 use rocket::request::FlashMessage;

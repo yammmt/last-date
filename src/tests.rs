@@ -1,7 +1,7 @@
 use super::models::label::Label;
 use super::models::task::Task;
 
-use parking_lot::{const_mutex, Mutex};
+use parking_lot::{Mutex, const_mutex};
 use rand::distr::{Alphanumeric, SampleString};
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};

@@ -13,7 +13,7 @@ mod tests;
 
 use crate::diesel::connection::SimpleConnection;
 use rocket::fairing::AdHoc;
-use rocket::fs::{relative, FileServer};
+use rocket::fs::{FileServer, relative};
 use rocket::{Build, Rocket};
 use rocket_dyn_templates::Template;
 use rocket_sync_db_pools::database;
@@ -22,7 +22,7 @@ use rocket_sync_db_pools::database;
 pub struct DbConn(diesel::SqliteConnection);
 
 async fn run_db_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
     let conn = DbConn::get_one(&rocket).await.expect("database connection");
 
