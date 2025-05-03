@@ -6,7 +6,7 @@ use rand::distr::{Alphanumeric, SampleString};
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use rocket::http::{ContentType, Status};
-use rocket::local::asynchronous::Client;
+use rocket::local::asynchronous::{Client, LocalResponse};
 use scraper::{Html, Selector};
 
 static DB_LOCK: Mutex<()> = const_mutex(());
@@ -37,6 +37,52 @@ macro_rules! run_test {
         })
     }};
 }
+
+// --- Test helpers ---
+
+async fn insert_label_by_post<'a>(
+    client: &'a Client,
+    name: &'a str,
+    color: &'a str,
+) -> LocalResponse<'a> {
+    client
+        .post("/label")
+        .header(ContentType::Form)
+        .body(format!("name={}&color={}", name, color))
+        .dispatch()
+        .await
+}
+
+async fn insert_task_by_post<'a>(
+    client: &'a Client,
+    name: &'a str,
+    description: &'a str,
+    updated_at: &'a str,
+    label_id: Option<i32>,
+) -> LocalResponse<'a> {
+    let mut form = format!(
+        "name={}&description={}&updated_at={}",
+        name, description, updated_at
+    );
+    if let Some(id) = label_id {
+        form.push_str(&format!("&label_id={}", id));
+    }
+    client
+        .post("/")
+        .header(ContentType::Form)
+        .body(form)
+        .dispatch()
+        .await
+}
+
+async fn label_exists(document: &Html, name: &str) -> bool {
+    let selector = Selector::parse("td,li,span").unwrap();
+    document
+        .select(&selector)
+        .any(|el| el.text().any(|t| t.trim() == name))
+}
+
+// --- Tests ---
 
 #[test]
 fn index_shows_main_task_table_headers() {
@@ -79,12 +125,7 @@ fn index_shows_main_task_table_headers() {
 fn index_shows_update_to_today_button() {
     run_test!(|client, _conn| {
         // --- Arrange: Insert a new task and check index page is accessible ---
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body("name=test+task")
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, "test+task", "", "", None).await;
         let res = client.get("/").dispatch().await;
         assert_eq!(res.status(), Status::Ok);
 
@@ -100,13 +141,6 @@ fn index_shows_update_to_today_button() {
             .any(|el| el.text().any(|t| t.trim() == button_name));
         assert!(found, "'{}' button not found in the table", button_name);
     })
-}
-
-async fn label_exists(document: &Html, name: &str) -> bool {
-    let selector = Selector::parse("td,li,span").unwrap();
-    document
-        .select(&selector)
-        .any(|el| el.text().any(|t| t.trim() == name))
 }
 
 #[test]
@@ -133,12 +167,7 @@ fn label_list_displays_created_labels() {
         );
 
         // --- Act: Create the label ---
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body(format!("name={}&color=#ababab", name))
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, &name, "#ababab").await;
 
         // --- Assert: Label is present ---
         let res = client.get("/label").dispatch().await;
@@ -161,14 +190,11 @@ fn label_list_displays_created_labels() {
 #[test]
 fn task_detail_page_shows_required_fields() {
     run_test!(|client, conn| {
-        // Create new task and get its ID.
-        let task_name: String = "detailpagetest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        // Create new task and get its ID using helper.
+        let task_name = "detailpagetest";
+        let task_description = "desc";
+        let updated_at = Local::now().naive_local().to_string();
+        insert_task_by_post(&client, task_name, task_description, &updated_at, None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
@@ -197,12 +223,7 @@ fn task_detail_page_shows_update_button() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "detailpagetest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, &task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
@@ -231,12 +252,7 @@ fn task_detail_page_shows_back_button() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "detailpagetest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, &task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
@@ -273,24 +289,14 @@ fn tasks_filtered_by_label_are_displayed_correctly() {
         let mut task_ids: Vec<i32> = Vec::with_capacity(3);
         for _ in 0..3 {
             let rng_name: String = Alphanumeric.sample_string(&mut rng, 7);
-            client
-                .post("/")
-                .header(ContentType::Form)
-                .body(format!("name={}", rng_name))
-                .dispatch()
-                .await;
+            insert_task_by_post(&client, &rng_name, "", "", None).await;
             let inserted_id = Task::all(&conn).await.last().unwrap().id.unwrap();
             task_names.push(rng_name);
             task_ids.push(inserted_id);
         }
 
         // Create a new label, too.
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=newlabel&color=#eeeeee")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "newlabel", "#eeeeee").await;
         let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
 
         // Attach label to several tasks.
@@ -327,12 +333,7 @@ fn task_delete_confirm_page_shows_delete_button() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "confirmpagetest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, &task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
@@ -358,12 +359,7 @@ fn task_delete_confirm_page_shows_back_to_task_button() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "confirmpagetest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, &task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
@@ -388,12 +384,7 @@ fn task_delete_confirm_page_shows_back_to_index_button() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "confirmpagetest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, &task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
@@ -421,12 +412,7 @@ fn task_delete_confirm_page_shows_back_to_index_button() {
 fn label_delete_confirm_page_shows_delete_button() {
     run_test!(|client, conn| {
         // Create a new label.
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=label+confirm+test&color=#ababab")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "labelconfirmtest", "#ababab").await;
         let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
@@ -451,12 +437,7 @@ fn label_delete_confirm_page_shows_delete_button() {
 fn label_delete_confirm_page_shows_back_to_label_button() {
     run_test!(|client, conn| {
         // Create a new label.
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=label+confirm+test&color=#ababab")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "labelconfirmtest", "#ababab").await;
         let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
@@ -480,12 +461,7 @@ fn label_delete_confirm_page_shows_back_to_label_button() {
 fn label_delete_confirm_page_shows_back_to_index_button() {
     run_test!(|client, conn| {
         // Create a new label.
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=label+confirm+test&color=#ababab")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "labelconfirmtest", "#ababab").await;
         let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access confirm page.
@@ -516,12 +492,7 @@ fn task_insertion_and_deletion_updates_db_and_ui() {
         let init_tasks = Task::all(&conn).await;
 
         // --- Act: Insert new task ---
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body("name=test+task")
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, "test task", "", "", None).await;
         let time_posted_ndt = Local::now().naive_local();
 
         // --- Assert: Task inserted in DB ---
@@ -557,12 +528,7 @@ fn label_insertion_and_deletion_updates_db_and_ui() {
         let init_labels = Label::all(&conn).await;
 
         // --- Act: Insert new label ---
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=test+label&color=#ababab")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "test label", "#ababab").await;
 
         // --- Assert: Label inserted in DB ---
         let new_labels = Label::all(&conn).await;
@@ -596,12 +562,7 @@ fn inserting_many_tasks_displays_all_in_ui() {
             // Insert new task with random name.
             let desc: String = Alphanumeric.sample_string(&mut rng, 6);
 
-            client
-                .post("/")
-                .header(ContentType::Form)
-                .body(format!("name={}", desc))
-                .dispatch()
-                .await;
+            insert_task_by_post(&client, &desc, "", "", None).await;
 
             // Record the name we choose for this iteration.
             descs.insert(0, desc);
@@ -630,12 +591,7 @@ fn invalid_task_form_submission_shows_warnings() {
 
         // Submit a form with an empty name. We look for `warning` in the
         // cookies which corresponds to flash message being set as a warning.
-        let res = client
-            .post("/")
-            .header(ContentType::Form)
-            .body("name=")
-            .dispatch()
-            .await;
+        let res = insert_task_by_post(&client, "", "", "", None).await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -722,24 +678,14 @@ fn invalid_label_form_submission_shows_warnings() {
         assert!(cookies.any(|value| value.contains("warning")));
 
         // Submit a form with invalid color (color code has 7 digits).
-        let res = client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=mylabel&color=#1234567")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "mylabel", "#1234567").await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("warning")));
 
         // Submit a form with invalid color (color code has 5 digits).
-        let res = client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=mylabel&color=#12345")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "mylabel", "#12345").await;
 
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
@@ -752,12 +698,7 @@ fn invalid_task_update_form_submission_shows_warnings() {
     run_test!(|client, conn| {
         // Create new task and get its ID.
         let task_name: String = "detailformtest".to_string();
-        client
-            .post("/")
-            .header(ContentType::Form)
-            .body(format!("name={}", task_name))
-            .dispatch()
-            .await;
+        insert_task_by_post(&client, &task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
         let post_url = format!("/{}", inserted_id);
 
@@ -841,12 +782,7 @@ fn updating_task_fields_persists_changes() {
         let t = Task::insert_with_old_date(&task_name, &conn).await;
         assert!(t);
 
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=newlabel&color=#eeeeee")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "newlabel", "#eeeeee").await;
 
         // --- Act: Submit valid update form ---
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
@@ -900,12 +836,7 @@ fn updating_task_fields_persists_changes() {
 fn updating_label_fields_persists_changes() {
     run_test!(|client, conn| {
         // --- Arrange: Create a new label ---
-        client
-            .post("/label")
-            .header(ContentType::Form)
-            .body("name=newlabel&color=#eeeeee")
-            .dispatch()
-            .await;
+        insert_label_by_post(&client, "newlabel", "#eeeeee").await;
         let inserted_id = Label::all(&conn).await[0].id.unwrap();
 
         // --- Act: Update the label ---
