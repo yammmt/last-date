@@ -75,6 +75,29 @@ async fn insert_task_by_post<'a>(
         .await
 }
 
+async fn update_task_by_post<'a>(
+    client: &'a Client,
+    task_id: i32,
+    name: &'a str,
+    description: &'a str,
+    updated_at: &'a str,
+    label_id: Option<i32>,
+) -> LocalResponse<'a> {
+    let mut form = format!(
+        "name={}&description={}&updated_at={}",
+        name, description, updated_at
+    );
+    if let Some(id) = label_id {
+        form.push_str(&format!("&label_id={}", id));
+    }
+    client
+        .post(format!("/{}", task_id))
+        .header(ContentType::Form)
+        .body(form)
+        .dispatch()
+        .await
+}
+
 async fn label_exists(document: &Html, name: &str) -> bool {
     let selector = Selector::parse("td,li,span").unwrap();
     document
@@ -302,16 +325,15 @@ fn tasks_filtered_by_label_are_displayed_correctly() {
         // Attach label to several tasks.
         let dt = Local::now().naive_local().to_string();
         for i in 0..2 {
-            let form_data = format!(
-                "name={}&description=&updated_at={}&label_id={}",
-                &task_names[i], dt, inserted_label_id
-            );
-            client
-                .post(format!("/{}", task_ids[i]))
-                .header(ContentType::Form)
-                .body(form_data)
-                .dispatch()
-                .await;
+            update_task_by_post(
+                &client,
+                task_ids[i],
+                &task_names[i],
+                "",
+                &dt,
+                Some(inserted_label_id),
+            )
+            .await;
         }
 
         // Ensure several tasks are shown.
@@ -849,16 +871,15 @@ fn updating_task_fields_persists_changes() {
         let inserted_label_id = Label::all(&conn).await[0].id.unwrap();
         let task_description = "newdescription".to_string();
         let dt = Local::now().naive_local().to_string();
-        let form_data = format!(
-            "name={}&description={}&updated_at={}&label_id={}",
-            task_name, task_description, dt, inserted_label_id
-        );
-        let res = client
-            .post(format!("/{}", inserted_id))
-            .header(ContentType::Form)
-            .body(form_data)
-            .dispatch()
-            .await;
+        let res = update_task_by_post(
+            &client,
+            inserted_id,
+            &task_name,
+            &task_description,
+            &dt,
+            Some(inserted_label_id),
+        )
+        .await;
 
         // --- Assert: DB and UI reflect changes ---
         let mut cookies = res.headers().get("Set-Cookie");
@@ -872,17 +893,15 @@ fn updating_task_fields_persists_changes() {
         assert_eq!(updated_task.label_id, Some(inserted_label_id));
 
         // Update label_id to NULL.
-        let form_data = format!(
-            "name={}&description={}&updated_at={}&label_id=",
-            task_name, task_description, dt
-        );
-        let res = client
-            .post(format!("/{}", inserted_id))
-            .header(ContentType::Form)
-            .body(form_data)
-            .dispatch()
-            .await;
-
+        let res = update_task_by_post(
+            &client,
+            inserted_id,
+            &task_name,
+            &task_description,
+            &dt,
+            None,
+        )
+        .await;
         let mut cookies = res.headers().get("Set-Cookie");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("success")));
