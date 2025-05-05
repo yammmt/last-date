@@ -37,3 +37,15 @@ $section-padding: 1rem 1.5rem;
     @extend .is-primary;
 }
 .tag.label-tag { color: black; }
+
+.task-inline-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.label-inline-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}

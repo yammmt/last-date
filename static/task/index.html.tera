@@ -14,10 +14,13 @@
             </div>
             {% endif %}
 
-            <form class="inline" action="/" method="post">
-                <input type="text" placeholder="new task name?"
-                    name="name" id="name" value="" autofocus>
-                <button class="button button-add-small is-info is-light" type="submit">add</button>
+            <form class="field has-addons task-inline-form" action="/" method="post">
+                <div class="control">
+                    <input class="input" type="text" placeholder="new task name?" name="name" id="name" value="" autofocus>
+                </div>
+                <div class="control">
+                    <button class="button button-add-small is-info is-light" type="submit">add</button>
+                </div>
             </form>
 
             <table class="table">

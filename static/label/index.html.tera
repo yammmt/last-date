@@ -14,11 +14,17 @@
             </div>
             {% endif %}
 
-            <form class="inline" action="label/" method="post">
-                <input type="text" placeholder="new label name?"
-                    name="name" id="name" value="" autofocus>
-                <input type="color" name="color" id="color" value="#90ee90">
-                <button class="button button-add-small is-light" type="submit">add</button>
+            <form class="field has-addons label-inline-form" action="label/" method="post">
+                <div class="control">
+                    <input class="input" type="text" placeholder="new label name?"
+                        name="name" id="name" value="" autofocus>
+                </div>
+                <div class="control">
+                    <input type="color" name="color" id="color" value="#90ee90">
+                </div>
+                <div class="control">
+                    <button class="button button-add-small is-light" type="submit">add</button>
+                </div>
             </form>
 
             <table class="table">
