@@ -60,9 +60,7 @@ async fn insert_task_by_post<'a>(
     updated_at: &'a str,
     label_id: Option<i32>,
 ) -> LocalResponse<'a> {
-    let mut form = format!(
-        "name={name}&description={description}&updated_at={updated_at}"
-    );
+    let mut form = format!("name={name}&description={description}&updated_at={updated_at}");
     if let Some(id) = label_id {
         form.push_str(&format!("&label_id={id}"));
     }
@@ -82,9 +80,7 @@ async fn update_task_by_post<'a>(
     updated_at: &'a str,
     label_id: Option<i32>,
 ) -> LocalResponse<'a> {
-    let mut form = format!(
-        "name={name}&description={description}&updated_at={updated_at}"
-    );
+    let mut form = format!("name={name}&description={description}&updated_at={updated_at}");
     if let Some(id) = label_id {
         form.push_str(&format!("&label_id={id}"));
     }
@@ -851,10 +847,7 @@ fn updating_task_date_sets_to_today() {
         assert_ne!(new_task_nd, today_ndt.date());
 
         let inserted_id = new_tasks[0].id.unwrap(); // `id` is `Nullable`
-        let res = client
-            .post(format!("/{inserted_id}/date"))
-            .dispatch()
-            .await;
+        let res = client.post(format!("/{inserted_id}/date")).dispatch().await;
         let mut cookies = res.headers().get("Set-Cookie");
         let final_tasks = Task::all(&conn).await;
         let final_task_ndt =
