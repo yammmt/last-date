@@ -48,7 +48,7 @@ async fn insert_label_by_post<'a>(
     client
         .post("/label")
         .header(ContentType::Form)
-        .body(format!("name={}&color={}", name, color))
+        .body(format!("name={name}&color={color}"))
         .dispatch()
         .await
 }
@@ -61,11 +61,10 @@ async fn insert_task_by_post<'a>(
     label_id: Option<i32>,
 ) -> LocalResponse<'a> {
     let mut form = format!(
-        "name={}&description={}&updated_at={}",
-        name, description, updated_at
+        "name={name}&description={description}&updated_at={updated_at}"
     );
     if let Some(id) = label_id {
-        form.push_str(&format!("&label_id={}", id));
+        form.push_str(&format!("&label_id={id}"));
     }
     client
         .post("/")
@@ -84,14 +83,13 @@ async fn update_task_by_post<'a>(
     label_id: Option<i32>,
 ) -> LocalResponse<'a> {
     let mut form = format!(
-        "name={}&description={}&updated_at={}",
-        name, description, updated_at
+        "name={name}&description={description}&updated_at={updated_at}"
     );
     if let Some(id) = label_id {
-        form.push_str(&format!("&label_id={}", id));
+        form.push_str(&format!("&label_id={id}"));
     }
     client
-        .post(format!("/{}", task_id))
+        .post(format!("/{task_id}"))
         .header(ContentType::Form)
         .body(form)
         .dispatch()
@@ -104,9 +102,9 @@ async fn update_label_by_post<'a>(
     name: &'a str,
     color: &'a str,
 ) -> LocalResponse<'a> {
-    let form = format!("name={}&color={}", name, color);
+    let form = format!("name={name}&color={color}");
     client
-        .post(format!("/label/{}", label_id))
+        .post(format!("/label/{label_id}"))
         .header(ContentType::Form)
         .body(form)
         .dispatch()
@@ -177,7 +175,7 @@ fn index_shows_update_to_today_button() {
         let found = document
             .select(&button_selector)
             .any(|el| el.text().any(|t| t.trim() == button_name));
-        assert!(found, "'{}' button not found in the table", button_name);
+        assert!(found, "'{button_name}' button not found in the table");
     })
 }
 
@@ -200,8 +198,7 @@ fn label_list_displays_created_labels() {
         // Assert that label name is NOT present before creation
         assert!(
             !label_exists(&document, &name).await,
-            "Label name '{}' unexpectedly found in label list page",
-            name
+            "Label name '{name}' unexpectedly found in label list page"
         );
 
         // --- Act: Create the label ---
@@ -219,8 +216,7 @@ fn label_list_displays_created_labels() {
         // Assert that label name IS present after creation
         assert!(
             label_exists(&document, &name).await,
-            "Label name '{}' not found in label list page after creation",
-            name
+            "Label name '{name}' not found in label list page after creation"
         );
     })
 }
@@ -236,7 +232,7 @@ fn task_detail_page_shows_required_fields() {
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
-        let res = client.get(format!("/{}", inserted_id)).dispatch().await;
+        let res = client.get(format!("/{inserted_id}")).dispatch().await;
         assert_eq!(
             res.status(),
             Status::Ok,
@@ -249,8 +245,7 @@ fn task_detail_page_shows_required_fields() {
         for expected in &label_texts {
             assert!(
                 body.contains(expected),
-                "Detail page missing '{}' field",
-                expected
+                "Detail page missing '{expected}' field"
             );
         }
     })
@@ -265,7 +260,7 @@ fn task_detail_page_shows_update_button() {
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
-        let res = client.get(format!("/{}", inserted_id)).dispatch().await;
+        let res = client.get(format!("/{inserted_id}")).dispatch().await;
         assert_eq!(
             res.status(),
             Status::Ok,
@@ -294,7 +289,7 @@ fn task_detail_page_shows_back_button() {
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
 
         // Ensure we can access detail page.
-        let res = client.get(format!("/{}", inserted_id)).dispatch().await;
+        let res = client.get(format!("/{inserted_id}")).dispatch().await;
         assert_eq!(
             res.status(),
             Status::Ok,
@@ -353,7 +348,7 @@ fn tasks_filtered_by_label_are_displayed_correctly() {
 
         // Ensure several tasks are shown.
         let res = client
-            .get(format!("/label/{}", inserted_label_id))
+            .get(format!("/label/{inserted_label_id}"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -375,7 +370,7 @@ fn task_delete_confirm_page_shows_delete_button() {
 
         // Ensure we can access confirm page.
         let res = client
-            .get(format!("/{}/confirm", inserted_id))
+            .get(format!("/{inserted_id}/confirm"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -401,7 +396,7 @@ fn task_delete_confirm_page_shows_back_to_task_button() {
 
         // Ensure we can access confirm page.
         let res = client
-            .get(format!("/{}/confirm", inserted_id))
+            .get(format!("/{inserted_id}/confirm"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -426,7 +421,7 @@ fn task_delete_confirm_page_shows_back_to_index_button() {
 
         // Ensure we can access confirm page.
         let res = client
-            .get(format!("/{}/confirm", inserted_id))
+            .get(format!("/{inserted_id}/confirm"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -454,7 +449,7 @@ fn label_delete_confirm_page_shows_delete_button() {
 
         // Ensure we can access confirm page.
         let res = client
-            .get(format!("/label/{}/confirm", inserted_id))
+            .get(format!("/label/{inserted_id}/confirm"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -479,7 +474,7 @@ fn label_delete_confirm_page_shows_back_to_label_button() {
 
         // Ensure we can access confirm page.
         let res = client
-            .get(format!("/label/{}/confirm", inserted_id))
+            .get(format!("/label/{inserted_id}/confirm"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -503,7 +498,7 @@ fn label_delete_confirm_page_shows_back_to_index_button() {
 
         // Ensure we can access confirm page.
         let res = client
-            .get(format!("/label/{}/confirm", inserted_id))
+            .get(format!("/label/{inserted_id}/confirm"))
             .dispatch()
             .await;
         assert_eq!(res.status(), Status::Ok);
@@ -547,7 +542,7 @@ fn task_insertion_and_deletion_updates_db_and_ui() {
 
         // --- Act: Delete the task ---
         let id = new_tasks[0].id.unwrap();
-        client.delete(format!("/{}", id)).dispatch().await;
+        client.delete(format!("/{id}")).dispatch().await;
 
         // --- Assert: Task deleted from DB ---
         let final_tasks = Task::all(&conn).await;
@@ -575,7 +570,7 @@ fn label_insertion_and_deletion_updates_db_and_ui() {
 
         // --- Act: Delete the label ---
         let id = new_labels[0].id.unwrap();
-        client.delete(format!("/label/{}", id)).dispatch().await;
+        client.delete(format!("/label/{id}")).dispatch().await;
 
         // --- Assert: Label deleted from DB ---
         let final_labels = Label::all(&conn).await;
@@ -709,7 +704,7 @@ fn label_form_submission_with_empty_name_shows_warnings() {
             .await;
 
         let mut cookies = res.headers().get("Set-Cookie");
-        println!("{:?}", res);
+        println!("{res:?}");
         assert_eq!(res.status(), Status::SeeOther);
         assert!(cookies.any(|value| value.contains("warning")));
     })
@@ -756,7 +751,7 @@ fn task_update_form_submission_without_form_shows_warnings() {
         let task_name = "detailformtest";
         insert_task_by_post(&client, task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
-        let post_url = format!("/{}", inserted_id);
+        let post_url = format!("/{inserted_id}");
 
         // Act: POST with no form data
         let res = client
@@ -778,7 +773,7 @@ fn task_update_form_submission_without_name_shows_warnings() {
         let task_name = "detailformtest";
         insert_task_by_post(&client, task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
-        let post_url = format!("/{}", inserted_id);
+        let post_url = format!("/{inserted_id}");
 
         // Act: POST without name field
         let res = client
@@ -800,7 +795,7 @@ fn task_update_form_submission_without_description_shows_warnings() {
         let task_name = "detailformtest";
         insert_task_by_post(&client, task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
-        let post_url = format!("/{}", inserted_id);
+        let post_url = format!("/{inserted_id}");
 
         // Act: POST without description field
         let res = client
@@ -822,7 +817,7 @@ fn task_update_form_submission_with_empty_name_shows_warnings() {
         let task_name = "detailformtest";
         insert_task_by_post(&client, task_name, "", "", None).await;
         let inserted_id = Task::all(&conn).await[0].id.unwrap();
-        let post_url = format!("/{}", inserted_id);
+        let post_url = format!("/{inserted_id}");
 
         // Act: POST with empty name
         let res = client
@@ -857,7 +852,7 @@ fn updating_task_date_sets_to_today() {
 
         let inserted_id = new_tasks[0].id.unwrap(); // `id` is `Nullable`
         let res = client
-            .post(format!("/{}/date", inserted_id))
+            .post(format!("/{inserted_id}/date"))
             .dispatch()
             .await;
         let mut cookies = res.headers().get("Set-Cookie");

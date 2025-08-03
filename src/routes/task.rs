@@ -118,7 +118,7 @@ pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Templ
 #[post("/<id>", data = "<task_update_form>")]
 pub async fn update(id: i32, task_update_form: Form<TaskUpdate>, conn: DbConn) -> Flash<Redirect> {
     let task = task_update_form.into_inner();
-    let redirect_url = format!("/{}", id);
+    let redirect_url = format!("/{id}");
     if task.name.is_empty() {
         Flash::warning(Redirect::to(redirect_url), "Please input task name.")
     } else if Task::update(id, task, &conn).await {

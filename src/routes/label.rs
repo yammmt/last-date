@@ -93,7 +93,7 @@ pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
 pub async fn update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
     let label = label_form.into_inner();
     let color_code_regex = Regex::new(r"#[[:xdigit:]]{6}$").unwrap();
-    let redirect_url = format!("/label/{}/edit", id);
+    let redirect_url = format!("/label/{id}/edit");
     if label.name.is_empty() {
         Flash::warning(Redirect::to(redirect_url), "Please input label name.")
     } else if label.color.is_empty() || !color_code_regex.is_match(&label.color) {
