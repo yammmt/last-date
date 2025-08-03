@@ -5,12 +5,8 @@ updates:
       directory: "/"
       schedule:
         interval: "daily"
-      reviewers:
-        - yammmt
 
     - package-ecosystem: "github-actions"
       directory: "/"
       schedule:
         interval: "daily"
-      reviewers:
-        - yammmt
