@@ -13,7 +13,7 @@ serde = "1.0.219"
 serde_json = "^1.0"
 serde_derive = "1.0.126"
 diesel = { version = "^2.2", features = ["sqlite", "r2d2", "chrono"] }
-diesel_migrations = "^2.2"
+diesel_migrations = "^2.3"
 log = "^0.4"
 chrono = { version = "^0.4", features = ["serde"] }
 regex = "^1.11"
