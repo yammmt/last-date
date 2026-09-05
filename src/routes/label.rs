@@ -125,16 +125,16 @@ pub async fn confirm(id: i32, conn: DbConn) -> Template {
 }
 
 #[delete("/label/<id>")]
-pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
+pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Box<Template>> {
     if Label::delete_with_id(id, &conn).await {
         Ok(Flash::success(
             Redirect::to("/label"),
             "Your label was deleted.",
         ))
     } else {
-        Err(Template::render(
+        Err(Box::new(Template::render(
             "label/index",
             IndexContext::err(&conn, "Couldn't delete label.").await,
-        ))
+        )))
     }
 }

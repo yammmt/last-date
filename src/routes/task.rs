@@ -134,13 +134,13 @@ pub async fn confirm(id: i32, conn: DbConn) -> Template {
 }
 
 #[delete("/<id>")]
-pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Template> {
+pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Box<Template>> {
     if Task::delete_with_id(id, &conn).await {
         Ok(Flash::success(Redirect::to("/"), "Your task was deleted."))
     } else {
-        Err(Template::render(
+        Err(Box::new(Template::render(
             "task/index",
             IndexContext::err(&conn, "Couldn't delete task.").await,
-        ))
+        )))
     }
 }
