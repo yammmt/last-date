@@ -3,6 +3,7 @@
 {% block title %}last-date{% endblock title %}
 {% block head %}
     {{ super() }}
+    <script src="/js/task-search.js" defer></script>
 {% endblock head %}
 
 {% block content %}
@@ -23,6 +24,14 @@
                 </div>
             </form>
 
+            <div class="field">
+                <label class="label" for="task-search">Search tasks</label>
+                <div class="control">
+                    <input class="input" type="search" id="task-search" placeholder="Search by task name or label" aria-controls="task-list">
+                </div>
+            </div>
+            <p id="task-search-empty" role="status" hidden>No matching tasks.</p>
+
             <table class="table">
                 <thead>
                     <tr>
@@ -31,35 +40,35 @@
                         <th>Last updated</th>
                         <th>Update to today</th>
                     </tr>
-                    <tbody>
-                        {% for task in tasks %}
-                        <tr>
-                            <td>
-                                {% if task.label_id %}
-                                {% for label in labels %}
-                                {% if label.id == task.label_id %}
-                                <button class="button label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
-                                    {{ label.name }}
-                                </button>
-                                {% break %}
-                                {% endif %}
-                                {% endfor %}
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td><a href="{{ task.id }}">{{ task.name }}</a></td>
-                            <td>{{ task.updated_at }}</td>
-                            <td>
-                                <form class="inline" action="{{ task.id }}/date" method="post">
-                                    <input type="hidden" name="_method" value="post" />
-                                    <button class="button button-update is-light" type="submit">I did it today!</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
                 </thead>
+                <tbody id="task-list">
+                    {% for task in tasks %}
+                    <tr>
+                        <td data-searchable>
+                            {% if task.label_id %}
+                            {% for label in labels %}
+                            {% if label.id == task.label_id %}
+                            <button class="button label-button" style="background-color: {{ label.color_hex }}" onclick="location.href='/label/{{ task.label_id }}'">
+                                {{ label.name }}
+                            </button>
+                            {% break %}
+                            {% endif %}
+                            {% endfor %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td data-searchable><a href="{{ task.id }}">{{ task.name }}</a></td>
+                        <td>{{ task.updated_at }}</td>
+                        <td>
+                            <form class="inline" action="{{ task.id }}/date" method="post">
+                                <input type="hidden" name="_method" value="post" />
+                                <button class="button button-update is-light" type="submit">I did it today!</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </section>
