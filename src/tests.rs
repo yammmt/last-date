@@ -1,7 +1,7 @@
 use super::models::label::Label;
 use super::models::task::Task;
 
-use parking_lot::{Mutex, const_mutex};
+use parking_lot::Mutex;
 use rand::distr::{Alphanumeric, SampleString};
 
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
@@ -9,7 +9,7 @@ use rocket::http::{ContentType, Status};
 use rocket::local::asynchronous::{Client, LocalResponse};
 use scraper::{Html, Selector};
 
-static DB_LOCK: Mutex<()> = const_mutex(());
+static DB_LOCK: Mutex<()> = Mutex::new(());
 
 macro_rules! run_test {
     (|$client:ident, $conn:ident| $block:expr_2021) => {{
