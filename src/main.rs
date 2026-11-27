@@ -15,7 +15,7 @@ use crate::diesel::connection::SimpleConnection;
 use rocket::fairing::AdHoc;
 use rocket::fs::{FileServer, relative};
 use rocket::{Build, Rocket};
-use rocket_dyn_templates::Template;
+use rocket_dyn_templates::Templating;
 use rocket_sync_db_pools::database;
 
 #[database("sqlite_database")]
@@ -46,7 +46,7 @@ fn rocket() -> _ {
     rocket::build()
         .attach(DbConn::fairing())
         .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
-        .attach(Template::fairing())
+        .attach(Templating::new())
         .mount("/", FileServer::from(relative!("static")))
         .mount(
             "/",

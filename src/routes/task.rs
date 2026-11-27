@@ -79,7 +79,7 @@ pub async fn new(task_form: Form<TaskName>, conn: DbConn) -> Flash<Redirect> {
 #[get("/")]
 pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
-        "task/index",
+        "task/index.html",
         match msg {
             Some(ref msg) => IndexContext::raw(&conn, Some((msg.kind(), msg.message()))).await,
             None => IndexContext::raw(&conn, None).await,
@@ -89,7 +89,7 @@ pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
 
 #[get("/label/<id>", rank = 0)]
 pub async fn by_label(id: i32, conn: DbConn) -> Template {
-    Template::render("task/bylabel", ByLabelContext::raw(id, &conn).await)
+    Template::render("task/bylabel.html", ByLabelContext::raw(id, &conn).await)
 }
 
 #[post("/<id>/date", rank = 1)]
@@ -107,7 +107,7 @@ pub async fn update_date(id: i32, conn: DbConn) -> Flash<Redirect> {
 #[get("/<id>")]
 pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
-        "task/edit",
+        "task/edit.html",
         match msg {
             Some(ref msg) => SingleContext::raw(id, &conn, Some((msg.kind(), msg.message()))).await,
             None => SingleContext::raw(id, &conn, None).await,
@@ -130,7 +130,10 @@ pub async fn update(id: i32, task_update_form: Form<TaskUpdate>, conn: DbConn) -
 
 #[get("/<id>/confirm", rank = 1)]
 pub async fn confirm(id: i32, conn: DbConn) -> Template {
-    Template::render("task/confirm", SingleContext::raw(id, &conn, None).await)
+    Template::render(
+        "task/confirm.html",
+        SingleContext::raw(id, &conn, None).await,
+    )
 }
 
 #[delete("/<id>")]
@@ -139,7 +142,7 @@ pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Box<Templa
         Ok(Flash::success(Redirect::to("/"), "Your task was deleted."))
     } else {
         Err(Box::new(Template::render(
-            "task/index",
+            "task/index.html",
             IndexContext::err(&conn, "Couldn't delete task.").await,
         )))
     }

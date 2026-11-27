@@ -81,7 +81,7 @@ pub async fn new(label_form: Form<LabelForm>, conn: DbConn) -> Flash<Redirect> {
 #[get("/label")]
 pub async fn index(msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
-        "label/index",
+        "label/index.html",
         match msg {
             Some(ref msg) => IndexContext::raw(&conn, Some((msg.kind(), msg.message()))).await,
             None => IndexContext::raw(&conn, None).await,
@@ -111,7 +111,7 @@ pub async fn update(id: i32, label_form: Form<LabelForm>, conn: DbConn) -> Flash
 #[get("/label/<id>/edit", rank = 0)]
 pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     Template::render(
-        "label/edit",
+        "label/edit.html",
         match msg {
             Some(ref msg) => UpdateContext::raw(id, &conn, Some((msg.kind(), msg.message()))).await,
             None => UpdateContext::raw(id, &conn, None).await,
@@ -121,7 +121,7 @@ pub async fn edit(id: i32, msg: Option<FlashMessage<'_>>, conn: DbConn) -> Templ
 
 #[get("/label/<id>/confirm")]
 pub async fn confirm(id: i32, conn: DbConn) -> Template {
-    Template::render("label/confirm", SingleContext::raw(id, &conn).await)
+    Template::render("label/confirm.html", SingleContext::raw(id, &conn).await)
 }
 
 #[delete("/label/<id>")]
@@ -133,7 +133,7 @@ pub async fn delete(id: i32, conn: DbConn) -> Result<Flash<Redirect>, Box<Templa
         ))
     } else {
         Err(Box::new(Template::render(
-            "label/index",
+            "label/index.html",
             IndexContext::err(&conn, "Couldn't delete label.").await,
         )))
     }

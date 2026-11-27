@@ -1,4 +1,4 @@
-{% extends "base" %}
+{% extends "base.html" %}
 
 {% block title %}last-date{% endblock title %}
 {% block head %}
@@ -10,8 +10,8 @@
     <section class="section">
         <div class="container">
             {% if msg %}
-            <div class="notification is-{{ msg.0 }} is-light">
-                {{ msg.1 }}
+            <div class="notification is-{{ msg[0] }} is-light">
+                {{ msg[1] }}
             </div>
             {% endif %}
 
