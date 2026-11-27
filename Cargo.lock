@@ -331,7 +331,7 @@ version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9824c36a57a17ece4c8883baed41dc3eb81b2b949364c174750acc462e19b5ec"
 dependencies = [
- "bitflags 2.4.1",
+ "bitflags 2.13.2",
  "chrono",
  "diesel_derives",
  "downcast-rs",
@@ -890,7 +890,7 @@ dependencies = [
  "dotenv",
  "log",
  "parking_lot 0.13.0",
- "rand 0.10.3",
+ "rand 0.10.4",
  "regex",
  "rocket",
  "rocket_dyn_templates",
@@ -1421,9 +1421,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65c9fb96cbc91e3478eaae79a69fcd3f1ae4ad052e471fe6732fff548984b4af"
+checksum = "8f6fa277c67e6ea590466f04c3fe82cb509f0864fe470643e5570de9514a9b11"
 dependencies = [
  "chacha20",
  "getrandom",
